@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { setPageTitle } from '../../../features/common/headerSlice'
-import Data from '../../../features/leads/DataIndustri'
+import Data from '../../../features/leads/DataIndustri/DataIndustri'
 
 function InternalPage(){
     const dispatch = useDispatch()

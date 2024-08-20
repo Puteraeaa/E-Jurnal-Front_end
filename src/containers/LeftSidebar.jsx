@@ -1,38 +1,89 @@
 import routes from "../routes/sidebar";
-import { NavLink, Routes, Link, useLocation } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import SidebarSubmenu from "./SidebarSubmenu";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
-import { useDispatch } from "react-redux";
 import ArrowRightOnRectangleIcon from "@heroicons/react/24/outline/ArrowRightOnRectangleIcon";
+import { useDispatch } from "react-redux";
+import Api from "../api";
+import Cookies from "js-cookie";
+import toast from "react-hot-toast";
 
 function LeftSidebar() {
   const location = useLocation();
-
+  const navigate = useNavigate(); // Correct way to navigate programmatically
   const dispatch = useDispatch();
+  const token = Cookies.get("token");
+  const user = JSON.parse(Cookies.get("user"));
+  console.log("User:", user);
 
-  function logoutUser() {
-    localStorage.clear();
-    window.location.href = "/";
-  }
+  
 
-  const close = (e) => {
+  const [classrooms, setClassrooms] = useState([]);
+
+  
+//   const getUser = async () => {
+//     try {
+//         const response = await Api.get(`/admin/student/${user.id}`, {
+//             headers: {
+//                 Authorization: `Bearer ${token}`,
+//             }
+//         });
+//         setClassrooms(response); 
+//         console.log('Response data kelas :', response);
+//     } catch (error) {
+//         console.error('Error fetching classrooms:', error.message);
+//     }
+// };
+
+// useEffect(() => {
+//     getUser();
+// }, []);
+
+  const logout = async (e) => {
+    e.preventDefault();
+
+    try {
+      await Api.post("/logout");
+
+      // Remove cookies on successful logout
+      Cookies.remove("user");
+      Cookies.remove("token");
+      Cookies.remove("permissions");
+
+      toast.success("Logout Successfully!", {
+        position: "top-right",
+        duration: 4000,
+      });
+
+      // Navigate to the homepage or login page
+      navigate("/");
+    } catch (error) {
+      toast.error("Failed to logout. Please try again.", {
+        position: "top-right",
+        duration: 4000,
+      });
+      console.error("Logout error:", error);
+    }
+  };
+
+  const close = () => {
     document.getElementById("left-sidebar-drawer").click();
   };
 
   return (
-    <div className="drawer-side  z-30  ">
+    <div className="drawer-side z-30">
       <label htmlFor="left-sidebar-drawer" className="drawer-overlay"></label>
-      <ul className="menu  pt-2 w-80 bg-base-100 min-h-full   text-base-content">
+      <ul className="menu pt-2 w-80 bg-base-100 min-h-full text-base-content">
         <button
-          className="btn btn-ghost bg-base-300  btn-circle z-50 top-0 right-0 mt-4 mr-2 absolute lg:hidden"
-          onClick={() => close()}
+          className="btn btn-ghost bg-base-300 btn-circle z-50 top-0 right-0 mt-4 mr-2 absolute lg:hidden"
+          onClick={close}
         >
           <XMarkIcon className="h-5 inline-block w-5" />
         </button>
 
         <li className="mb-2 font-semibold text-xl">
           <Link to={"/app/dashboard"}>
-            {" "}
             <img
               src={"/smk.png"}
               alt="Profile"
@@ -52,8 +103,8 @@ function LeftSidebar() {
             className="w-12 h-12 rounded-full mr-5"
           />
           <div>
-            <div className="text-sm">Admin</div>
-            <div className="text-lg font-semibold">Akun</div>
+            {/* <div className="text-sm">{classrooms.roles}</div> */}
+            <div className="text-lg font-semibold">{user.name}</div>
           </div>
 
           <div className="divider mt-0 mb-0"></div>
@@ -70,14 +121,14 @@ function LeftSidebar() {
                   to={route.path}
                   className={({ isActive }) =>
                     `${
-                      isActive ? "font-semibold  bg-base-200 " : "font-normal"
+                      isActive ? "font-semibold bg-base-200" : "font-normal"
                     }`
                   }
                 >
                   {route.icon} {route.name}
                   {location.pathname === route.path ? (
                     <span
-                      className="absolute inset-y-0 left-0 w-1 rounded-tr-md rounded-br-md bg-secondary "
+                      className="absolute inset-y-0 left-0 w-1 rounded-tr-md rounded-br-md bg-[#3b82f5]"
                       aria-hidden="true"
                     ></span>
                   ) : null}
@@ -87,13 +138,13 @@ function LeftSidebar() {
           );
         })}
 
-        <Link
-          to={"/"}
-          className="flex items-center text-red-600 hover:bg-red-100 pr-5 pl-5 p-2 w-full  rounded-tr-md "
+        <button
+          onClick={logout}
+          className="flex items-center text-red-600 hover:bg-red-100 pr-5 pl-5 p-2 w-full rounded-tr-md"
         >
           <ArrowRightOnRectangleIcon className="mr-5 w-5" />
           Logout
-        </Link>
+        </button>
       </ul>
     </div>
   );

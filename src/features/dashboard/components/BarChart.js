@@ -29,11 +29,6 @@ const data = {
   labels,
   datasets: [
     {
-      label: 'Gagal Berkunjung',
-      data: labels.map(() => Math.random(1) + 2),
-      backgroundColor: 'rgba(255, 99, 132, 1)',
-    },
-    {
       label: 'Berhasil Berkunjung',
       data: labels.map(() => Math.random(1) + 1),
       backgroundColor: 'rgba(53, 162, 235, 1)',

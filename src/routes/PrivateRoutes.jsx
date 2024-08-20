@@ -1,5 +1,5 @@
 //import cookie
-import Cookies from "js-cookie";
+import Cookies from 'js-cookie';
 
 //import react router dom
 import { Navigate } from "react-router-dom";

@@ -36,3 +36,28 @@
     transform: rotate(360deg);
   }
 }
+
+
+/* CSS untuk mode gelap swal */
+.dark-popup {
+  background-color: #1c2229; /* Warna latar belakang gelap */
+  color: #ffffff; /* Warna teks putih */
+}
+
+.dark-title {
+  color: #ffffff; /* Warna teks judul */
+}
+
+.dark-text {
+  color: #cccccc; /* Warna teks konten */
+}
+
+/* Pengaturan warna tombol */
+.swal2-styled.swal2-confirm {
+  background-color: #3085d6 !important; /* Warna tombol konfirmasi */
+}
+
+.swal2-styled.swal2-cancel {
+  background-color: #d33 !important; /* Warna tombol batal */
+}
+

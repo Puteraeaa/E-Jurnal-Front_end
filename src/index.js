@@ -6,6 +6,9 @@ import reportWebVitals from './reportWebVitals';
 import store from './app/store'
 import { Provider } from 'react-redux'
 import SuspenseContent from './containers/SuspenseContent';
+import 'leaflet/dist/leaflet.css';
+
+
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -13,6 +16,7 @@ root.render(
     <Suspense fallback={<SuspenseContent />}>
         <Provider store={store}>
             <App />
+         
         </Provider>
     </Suspense>
   // </React.StrictMode>
