@@ -22,26 +22,9 @@ const AbsenceForm = () => {
   const canvasRef = useRef(null);
   const token = Cookies.get("token");
 
-  const [industri, setIndustri] = useState([]);
   const user = JSON.parse(Cookies.get('user'));
 
-  const getIndustri = async () => {
-    try {
-      const response = await Api.get(`admin/industri/${user.industri_id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setIndustri(response.data.data);
-    } catch (error) {
-      console.error('Error fetching industri:', error.message);
-    }
-  };
-
-  useEffect(() => {
-    getIndustri();
-  }, []);
+ 
 
   // Function to update the current time every second
   useEffect(() => {
@@ -127,6 +110,13 @@ const AbsenceForm = () => {
     setPhoto(dataUrl);
   };
 
+  const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
   const handleSubmit = async () => {
     const result = await swal.fire({
       title: "Absen",
@@ -137,46 +127,57 @@ const AbsenceForm = () => {
       cancelButtonColor: "#d33",
       confirmButtonText: "Ya, absen!",
     });
-
+  
     if (result.isConfirmed) {
+      const now = new Date();
       const newEntry = {
-        date: new Date().toLocaleDateString(),
-        departureTime: currentTime.hours + ":" + currentTime.minutes,
-        arrivalTime: currentTime.hours + ":" + currentTime.minutes,
+        date: formatDate(now), // Use formatted date
+        departureTime: formatTime(currentTime.hours, currentTime.minutes, currentTime.seconds),
+        arrivalTime: formatTime(currentTime.hours, currentTime.minutes, currentTime.seconds),
         absenceReason: 'hadir',
         longitude: location ? location.longitude : null,
         latitude: location ? location.latitude : null,
-        image: photo,
       };
-
-      console.log("Submitting the following data:", newEntry);
-
+  
       try {
-        // Check if all required fields are filled
-        if (!newEntry.date || !newEntry.departureTime || !newEntry.arrivalTime || !newEntry.absenceReason || !newEntry.longitude || !newEntry.latitude || !newEntry.image) {
-          console.error("Missing required fields:", newEntry);
-          throw new Error('Required fields are missing');
+        // Convert the base64 image to a Blob
+        const base64Data = photo.split(',')[1];
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
-
-        const response = await Api.post('/admin/absence', newEntry, {
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'image/jpeg' });
+  
+        // Create FormData and append the Blob as a file
+        const formData = new FormData();
+        formData.append('date', newEntry.date);
+        formData.append('departureTime', newEntry.departureTime);
+        // formData.append('arrivalTime', newEntry.arrivalTime);
+        formData.append('absenceReason', newEntry.absenceReason);
+        formData.append('longitude', newEntry.longitude);
+        formData.append('latitude', newEntry.latitude);
+        formData.append('image', blob, 'photo.jpg'); // Append the Blob as a .jpg file
+  
+        const response = await Api.post('/admin/absence', formData, {
           headers: {
             Authorization: `Bearer ${token}`,
-          }
+            'Content-Type': 'multipart/form-data', // Ensure the request is treated as multipart
+          },
         });
-
-        toast.success(response.data.message, {
+  
+        toast.success(response.data.message, { 
           position: "top-right",
           duration: 4000,
         });
-
-        console.log("Attendance data submitted successfully:", newEntry);
+  
         clearForm();
         setShowModal(false);
       } catch (error) {
         console.error("Error submitting attendance:", error.response ? error.response.data : error.message);
-
+  
         if (error.response && error.response.data) {
-          console.log("Server response error details:", error.response.data);
           toast.error(`Gagal melakukan absen. ${error.response.data.message || "Periksa kembali input Anda."}`, {
             position: "top-right",
             duration: 4000,
@@ -190,6 +191,12 @@ const AbsenceForm = () => {
       }
     }
   };
+
+  
+  const formatTime = (hours, minutes, seconds) => {
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  };
+  
 
   const handleResetCamera = () => {
     setPhoto(null);
@@ -233,6 +240,7 @@ const AbsenceForm = () => {
 
       <Link className="btn btn-primary mt-6 text-white mx-auto" to='/app/rekap-absensi'> Riwayat Absen</Link>
 
+
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 md:w-1/3 relative">
@@ -263,10 +271,13 @@ const AbsenceForm = () => {
             {photo ? (
               <>
                 <img
-                  src={photo}
-                  alt="Preview"
-                  className="mt-4 w-[1120px] h-[400px] mx-auto cursor-pointer"
-                />
+           
+                 src={photo}
+                 alt="Preview"
+                 className="mt-4 w-full h-auto mx-auto cursor-pointer object-cover"
+               />
+               
+
                 <button
                   onClick={handleResetCamera}
                   className="mt-4 p-2 bg-yellow-500 text-white rounded-md w-[200px] md:text-xl md:hover:bg-yellow-700"

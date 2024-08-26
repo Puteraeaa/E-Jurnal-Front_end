@@ -10,30 +10,48 @@ import 'leaflet/dist/leaflet.css';
 const AttendanceSummary = () => {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const token = Cookies.get("token");
+  const recordsPerPage = 10; 
+  const [paginationLinks, setPaginationLinks] = useState([]);
+  
 
-  // Fetch attendance records from the server
-  const getAttendanceRecords = async () => {
-    try {
-      const response = await Api.get("/admin/absence", {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      console.log("Response data:", response.data); // Log the data to see its structure
+const getAttendanceRecords = async (page) => {
+  try {
+    const response = await Api.get(`/admin/absence?page=${page}&limit=${recordsPerPage}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
 
-      setAttendanceRecords(response.data.data.data);
+    console.log("Response data:", response.data);
 
-      // Ensure the response data is an array
-    } catch (error) {
-      console.error("Error fetching attendance records:", error.message);
-      toast.error("Failed to fetch attendance records");
-    }
-  };
+    setAttendanceRecords(response.data.data.data);
+    setTotalPages(response.data.data.totalPages || 1); // Set total pages or fallback to 1
+    setPaginationLinks(response.data.data.links || []); // Store pagination links
+
+  } catch (error) {
+    console.error("Error fetching attendance records:", error.message);
+    toast.error("Failed to fetch attendance records");
+  }
+};
 
   useEffect(() => {
-    getAttendanceRecords();
-  }, []);
+    getAttendanceRecords(currentPage);
+  }, [currentPage]);
+
+  // Handle page change
+  const handlePageChange = (url) => {
+    // Extract the page number from the URL
+    const urlParams = new URLSearchParams(url.split('?')[1]);
+    const page = urlParams.get('page');
+    
+    if (page) {
+      setCurrentPage(parseInt(page, 10));
+    }
+  };
+  
 
   return (
     <div className="container mx-auto mt-5 px-4 md:mt-10 md:px-8 mb-[400px]">
@@ -52,25 +70,34 @@ const AttendanceSummary = () => {
               <th className="py-2 px-4 border-b">Waktu Masuk</th>
               <th className="py-2 px-4 border-b">Waktu Keluar</th>
               <th className="py-2 px-4 border-b">Photo</th>
-              {hasAnyPermission(["siswa.delete"]) && <th className="py-2 px-4 border-b">Action</th>}
+             <th className="py-2 px-4 border-b">Action</th>
             </tr>
           </thead>
           <tbody>
             {attendanceRecords.length > 0 ? (
               attendanceRecords.map((record, index) => (
                 <tr key={index}>
-                  <td className="py-2 px-4 border-b text-center">{index + 1}</td>
+                  <td className="py-2 px-4 border-b text-center">{(currentPage - 1) * recordsPerPage + index + 1}</td>
                   <td className="py-2 px-4 border-b text-center">{record.users ? record.users.name : "-"}</td>
                   <td className="py-2 px-4 border-b text-center">{record.users ? record.claa : "-"}</td>
                   <td className="py-2 px-4 border-b text-center">{record.absenceReason}</td>
-                  <td className="py-2 px-4 border-b text-center">{record.arrivalTime}</td>
                   <td className="py-2 px-4 border-b text-center">{record.departureTime}</td>
+                  <td className="py-2 px-4 border-b text-center"> 
+                    {record.arrivalTime ? (
+                      <p> {record.arrivalTime}</p>
+                    ) : (
+                      <p>Belum Absen Keluar</p>
+                    )}
+                  </td>
                   <td className="py-2 px-4 border-b text-center">
                     <img
-                      src={record.image}
+                      src={`${record.image}`}
                       alt="Attendance"
                       className="w-12 h-12 object-cover mx-auto cursor-pointer rounded-full md:w-20 md:h-20"
-                      onClick={() => document.getElementById("my_modal_3").showModal()}
+                      onClick={() => {
+                        setSelectedRecord(record);
+                        document.getElementById("my_modal_3").showModal();
+                      }}
                     />
                   </td>
                   <td className="py-2 px-4 border-b text-center ">
@@ -82,11 +109,9 @@ const AttendanceSummary = () => {
                       }}>
                         Lihat Posisi
                     </button>
-                  {hasAnyPermission(["siswa.delete"]) && (
-                    
+                    {hasAnyPermission(["siswa.delete"]) && (
                       <button className="btn btn-primary btn-sm ml-2">Verifikasi</button>
-                    
-                  )}
+                    )}
                   </td>
                 </tr>
               ))
@@ -98,20 +123,30 @@ const AttendanceSummary = () => {
           </tbody>
         </table>
 
+ 
+
+
+
+        {/* Image Modal */}
         <dialog id="my_modal_3" className="modal">
           <div className="modal-box">
             <form method="dialog">
               <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
             </form>
             <h3 className="font-bold text-lg mb-4">Expend Photo</h3>
-            <img
-              src="https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80"
-              alt="Expanded Attendance"
-              className="rounded-lg"
-            />
+            {selectedRecord && selectedRecord.image ? (
+              <img
+                src={`${selectedRecord.image}`}
+                alt="Attendance"
+                className="rounded-lg w-full h-full object-cover"
+              />
+            ) : (
+              <p>Gambar tidak tersedia</p>
+            )}
           </div>
         </dialog>
 
+        {/* Map Modal */}
         <dialog id="my_modal_maps" className="modal">
           <div className="modal-box">
             <form method="dialog">
@@ -136,6 +171,19 @@ const AttendanceSummary = () => {
           </div>
         </dialog>
       </div>
+
+      <div className="flex justify-center mt-4">
+  {paginationLinks.map((link, index) => (
+    <button
+      key={index}
+      className={`btn btn-sm mx-1 ${link.active ? 'btn-primary' : ''}`}
+      onClick={() => link.url && handlePageChange(link.url)}
+      disabled={!link.url}
+    >
+      {link.label.replace(/&laquo;|&raquo;/g, '').trim()}
+    </button>
+  ))}
+</div>
 
       <ToastContainer />
     </div>

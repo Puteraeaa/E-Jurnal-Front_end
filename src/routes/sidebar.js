@@ -133,16 +133,16 @@ const routes = [
         icon: <UserIcon className={submenuIconClasses} />,
         name: 'Profile', // name that appear in Sidebar
       },
-      {
-        path: '/app/settings-billing',
-        icon: <WalletIcon className={submenuIconClasses} />,
-        name: 'Billing',
-      },
-      {
-        path: '/app/settings-team', // url
-        icon: <UsersIcon className={submenuIconClasses} />,
-        name: 'Team Members', // name that appear in Sidebar
-      },
+      // {
+      //   path: '/app/settings-billing',
+      //   icon: <WalletIcon className={submenuIconClasses} />,
+      //   name: 'Billing',
+      // },
+      // {
+      //   path: '/app/settings-team', // url
+      //   icon: <UsersIcon className={submenuIconClasses} />,
+      //   name: 'Team Members', // name that appear in Sidebar
+      // },
     ],
   },
 ];

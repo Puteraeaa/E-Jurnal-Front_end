@@ -84,7 +84,7 @@ const Leads = () => {
                     Authorization: `Bearer ${token}`,
                 }
             });
-            setSiswa(response.data);
+            setSiswa(response.data.data);
             setPagination({
                 currentPage: response.data.current_page,
                 perPage: response.data.per_page,

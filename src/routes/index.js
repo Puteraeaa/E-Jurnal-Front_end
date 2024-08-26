@@ -40,6 +40,7 @@ const Rekap = lazy(() => import('../pages/protected/Rekap'))
 const Laporan = lazy(() => import('../pages/protected/Laporan/Laporan'))
 const AddLaporan = lazy(() => import('../features/Laporan/Add-Laporan'))
 const DetailLAporan = lazy(() => import('../features/Laporan/DetailLaporan'))
+const Editlaporan = lazy(() => import('../features/Laporan/Edit-Laporan'))
 
 const Jurusan = lazy(() => import('../pages/protected/Jurusan/Index'))
 
@@ -160,6 +161,10 @@ const routes = [
   {
     path: 'detail-laporan/:id',
     component: DetailLAporan,
+  },
+  {
+    path: 'edit-laporan/:id',
+    component: Editlaporan,
   },
 
   {

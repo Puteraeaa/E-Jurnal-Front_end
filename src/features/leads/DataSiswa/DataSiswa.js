@@ -13,6 +13,27 @@ import Cookies from "js-cookie";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+function SkeletonRow() {
+    return (
+      <tr className="animate-pulse">
+        <td>
+          <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+        </td>
+        <td>
+          <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+        </td>
+        <td>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+        </td>
+        <td>
+          <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+        </td>
+        <td>
+          <div className="h-8 bg-gray-200 rounded w-full mx-auto"></div>
+        </td>
+      </tr>
+    );
+  };
 
 const Leads = () => {
     const { leads, loading, error } = useSelector((state) => state.lead);
@@ -154,30 +175,33 @@ const Leads = () => {
                             </tr>
                         </thead>
                         <tbody className="text-center">
-                            {siswa.map((lead) => (
-                                <tr key={lead.id}>
-                                    <td>
-                                        <div className="font-bold">{lead.name}</div>
-                                    </td>
-                                    <td>{lead.classes ? lead.classes.name : "-"}</td>
-                                    <td> <div className={getStatusClass(lead)}>{lead.industries ? "Sedang" : "Belum"}</div></td>
-                                    <td>{lead.industries ? lead.industries.name : "-"}</td>
-                                    <td className="flex space-x-0 w-32">
-                                        <button className="btn btn-ghost" onClick={() => viewLeadDetails(lead)}>
-                                            Selengkapnya
-                                        </button>
-                                        <Link to={`/app/data/siswa/edit/${lead.id}`}>
-                                        <button className="btn btn-square btn-ghost">
-                                            <PencilIcon className="w-5" />
-                                        </button>
-                                        </Link>
-
-                                        <button className="btn btn-square btn-ghost" onClick={() => deleteCurrentLead(lead.id)}>
-                                            <TrashIcon className="w-5" />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                        {loading ? (
+                                [...Array(8)].map((_, index) => <SkeletonRow key={index} />) // Display skeleton rows
+                            ) : (
+                                siswa.map((lead) => (
+                                    <tr key={lead.id}>
+                                        <td>
+                                            <div className="font-bold">{lead.name}</div>
+                                        </td>
+                                        <td>{lead.classes ? lead.classes.name : "-"}</td>
+                                        <td><div className={getStatusClass(lead)}>{lead.industries ? "Sedang" : "Belum"}</div></td>
+                                        <td>{lead.industries ? lead.industries.name : "-"}</td>
+                                        <td className="flex space-x-0 w-32">
+                                            <button className="btn btn-ghost" onClick={() => viewLeadDetails(lead)}>
+                                                Selengkapnya
+                                            </button>
+                                            <Link to={`/app/data/siswa/edit/${lead.id}`}>
+                                                <button className="btn btn-square btn-ghost">
+                                                    <PencilIcon className="w-5" />
+                                                </button>
+                                            </Link>
+                                            <button className="btn btn-square btn-ghost" onClick={() => deleteCurrentLead(lead.id)}>
+                                                <TrashIcon className="w-5" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>

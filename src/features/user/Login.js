@@ -65,8 +65,8 @@ function Login() {
         >
           <div className="flex items-center h-full px-20 bg-gray-900 bg-opacity-40">
             <div>
-              <h2 className="text-4xl font-bold text-white">
-                E-<span className="text-blue-200">Jurnal</span>
+              <h2 className="text-4xl font-bold text-white dark:text-white  ">
+                E-<span className="">Jurnal</span>
               </h2>
               <p className="max-w-xl mt-3 text-gray-300">
               E-Jurnal PKL (Praktik Kerja Lapangan) di SMKN 1 Ciomas adalah sistem digital yang digunakan oleh siswa yang sedang melaksanakan PKL untuk mencatat dan melaporkan kegiatan harian mereka selama periode PKL. Sistem ini menggantikan jurnal manual yang biasanya digunakan oleh siswa.
@@ -78,7 +78,7 @@ function Login() {
         <div className="flex items-center w-full max-w-md px-6 mx-auto lg:w-2/6">
           <div className="flex-1">
             <div className="text-center">
-              <h2 className="text-4xl font-bold text-center text-dark dark:text-white text-gray-800">
+              <h2 className="text-4xl font-bold text-center text-dark dark:text-white ">
                 E-Jurnal
               </h2>
               <p className="mt-3 text-gray-500 dark:text-gray-300">
@@ -93,13 +93,13 @@ function Login() {
                     htmlFor="username"
                     className="block mb-2 text-sm text-gray-600 dark:text-gray-200"
                   >
-                    Email Address
+                    Username
                   </label>
                   <input
                     type="text" // Changed type from "username" to "text"
                     name="username"
                     id="username"
-                    placeholder="example@example.com"
+                    placeholder="Your Username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="block w-full px-4 py-2 mt-2 text-gray-700 placeholder-gray-400 bg-white border border-gray-200 rounded-md dark:placeholder-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 focus:border-blue-400 dark:focus:border-blue-400 focus:ring-blue-400 focus:outline-none focus:ring focus:ring-opacity-40"
