@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ReactQuill from "react-quill";
-import 'react-quill/dist/quill.snow.css';
+import "react-quill/dist/quill.snow.css";
 import Api from "../../api";
 import Cookies from "js-cookie";
 import swal from "sweetalert2";
@@ -23,63 +23,65 @@ export default function UserCreate() {
   const token = Cookies.get("token");
 
   const storeUser = async (e) => {
-      e.preventDefault();
+    e.preventDefault();
 
-      // Validasi minimal 150 karakter untuk deskripsi
-      const newErrors = {};
-      if (deskripsi.length < 150) newErrors.deskripsi = ["Deskripsi harus terdiri dari minimal 150 karakter"];
-      if (!tanggal) newErrors.tanggal = ["Tanggal Wajib diisi"];
-      if (!startTime) newErrors.start_time = ["Start Time Wajib diisi"];
-      if (!endTime) newErrors.end_time = ["End Time Wajib diisi"];
-      if (!tools) newErrors.tools = ["Tools Wajib diisi"];
+    // Validasi minimal 150 karakter untuk deskripsi
+    const newErrors = {};
+    if (deskripsi.length < 150)
+      newErrors.deskripsi = [
+        "Deskripsi harus terdiri dari minimal 150 karakter"
+      ];
+    if (!tanggal) newErrors.tanggal = ["Tanggal Wajib diisi"];
+    if (!startTime) newErrors.start_time = ["Start Time Wajib diisi"];
+    if (!endTime) newErrors.end_time = ["End Time Wajib diisi"];
+    if (!tools) newErrors.tools = ["Tools Wajib diisi"];
 
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        return;
-      }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
-      try {
-          const result = await swal.fire({
-              title: "Memperbarui Program",
-              text: "Apakah Anda yakin ingin Memperbarui Program?",
-              icon: "warning",
-              showCancelButton: true,
-              confirmButtonColor: "#3085d6",
-              cancelButtonColor: "#d33",
-              confirmButtonText: "Ya, Perbarui!",
-          });
-  
-          if (result.isConfirmed) {
-              const formData = new FormData();
-              formData.append('description', deskripsi);
-              formData.append('start_time', startTime);
-              formData.append('end_time', endTime);
-              formData.append('tools', tools);
-              formData.append('date', tanggal);
-              if (image) formData.append('image', image);
+    try {
+      const result = await swal.fire({
+        title: "Memperbarui Program",
+        text: "Apakah Anda yakin ingin Memperbarui Program?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Ya, Perbarui!"
+      });
 
-              await Api.post(`admin/jurnal`, formData, {
-                  headers: {
-                      Authorization: `Bearer ${token}`,
-                      'Content-Type': 'multipart/form-data',
-                  }
-              });
+      if (result.isConfirmed) {
+        const formData = new FormData();
+        formData.append("description", deskripsi);
+        formData.append("start_time", startTime);
+        formData.append("end_time", endTime);
+        formData.append("tools", tools);
+        formData.append("date", tanggal);
+        if (image) formData.append("image", image);
 
-              toast.success('Program updated successfully!', {
-                  position: "top-right",
-                  duration: 4000,
-              });
-
-              navigate('/app/laporan');
+        await Api.post(`admin/jurnal`, formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data"
           }
-      } catch (error) {
-          console.error('Error updating program:', error.response);
-          toast.error('Failed to update program. Please try again later.', {
-              position: "top-right",
-              duration: 4000,
-          });
+        });
+
+        toast.success("Program updated successfully!", {
+          position: "top-right",
+          duration: 4000
+        });
+
+        navigate("/app/laporan");
       }
-  }
+    } catch (error) {
+      toast.error("Failed to update program. Please try again later.", {
+        position: "top-right",
+        duration: 4000
+      });
+    }
+  };
 
   return (
     <div className="container mx-auto my-10">
@@ -147,7 +149,9 @@ export default function UserCreate() {
                 onChange={(e) => setTanggal(e.target.value)}
               />
               {errors.tanggal && (
-                <div className="text-red-600 mt-2 p-1 rounded-lg">{errors.tanggal[0]}</div>
+                <div className="text-red-600 mt-2 p-1 rounded-lg">
+                  {errors.tanggal[0]}
+                </div>
               )}
             </div>
 

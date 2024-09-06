@@ -21,13 +21,13 @@ function GettingStartedContent(){
               <p>User authentication has been implemented using JWT token method (ofcourse you need backend API for generating and verifying token). This template can be used to start your next SaaS project or build new internal tools in your company.</p>
               <h4> Core libraries used - </h4>
               <ul>
-                  <li><a href="https://reactjs.org/" target="_blank">React JS v18.2.0</a></li>
-                  <li><a href="https://reactrouter.com/en/main" target="_blank">React Router v6.4.3</a></li>
-                  <li><a href="https://tailwindcss.com/" target="_blank">Tailwind CSS v3.3.6</a></li>
-                  <li><a href="https://daisyui.com/" target="_blank">Daisy UI v4.4.19</a></li>
-                  <li><a href="https://heroicons.com/" target="_blank">HeroIcons v2.0.13</a></li>
-                  <li><a href="https://redux-toolkit.js.org/" target="_blank">Redux toolkit v1.9.0</a></li>
-                  <li><a href="https://react-chartjs-2.js.org/" target="_blank">React ChartJS 2 v5.0.1</a></li>
+                  <li><a href="https://reactjs.org/" target="_blank" rel="noreferrer">React JS v18.2.0</a></li>
+                  <li><a href="https://reactrouter.com/en/main" target="_blank" rel="noreferrer">React Router v6.4.3</a></li>
+                  <li><a href="https://tailwindcss.com/" target="_blank" rel="noreferrer">Tailwind CSS v3.3.6</a></li>
+                  <li><a href="https://daisyui.com/" target="_blank" rel="noreferrer">Daisy UI v4.4.19</a></li>
+                  <li><a href="https://heroicons.com/" target="_blank" rel="noreferrer">HeroIcons v2.0.13</a></li>
+                  <li><a href="https://redux-toolkit.js.org/" target="_blank" rel="noreferrer">Redux toolkit v1.9.0</a></li>
+                  <li><a href="https://react-chartjs-2.js.org/" target="_blank" rel="noreferrer">React ChartJS 2 v5.0.1</a></li>
               </ul>
               <h4>Major features - </h4>
               <p className=''>Almost all major UI components are available in Daisy UI library. Apart from this logic has been added for following - </p>
@@ -49,7 +49,7 @@ function GettingStartedContent(){
               <h2 id="getstarted2">How to use?</h2>
                 <p>
                     Just clone the repo from github and then run following command (Make sure you have node js installed )<br/>
-                    <a href="https://github.com/srobbin01/daisyui-admin-dashboard-template" className='text-sm text-blue-500' target="_blank">Repo Link</a>
+                    <a href="https://github.com/srobbin01/daisyui-admin-dashboard-template" className='text-sm text-blue-500' target="_blank" rel="noreferrer">Repo Link</a>
                     <br />
                     <code> npm install </code><br />
                     <code>npm start</code>
@@ -65,9 +65,9 @@ function GettingStartedContent(){
               {/* Daisy UI */}
               <h2 id="getstarted4">Daisy UI</h2>
 
-              <p><a href="https://daisyui.com/" target="_blank" className='text-xl btn-link'>Daisy UI</a>, a popular free and opensource tailwind component library has been used for this template. It has a rich collection of components, layouts and is fully customizable and themeable.</p>
+              <p><a href="https://daisyui.com/" target="_blank" className='text-xl btn-link' rel="noreferrer">Daisy UI</a>, a popular free and opensource tailwind component library has been used for this template. It has a rich collection of components, layouts and is fully customizable and themeable.</p>
               
-              <p>Apart from this it also helps in making HTML code more cleaner as we don't have to include all utility classes of tailwind to make the UI. Check components <a href="https://daisyui.com/components/button/" target="_blank" className='btn-link'>documentation here</a>. For Ex- </p>
+              <p>Apart from this it also helps in making HTML code more cleaner as we don't have to include all utility classes of tailwind to make the UI. Check components <a href="https://daisyui.com/components/button/" target="_blank" className='btn-link' rel="noreferrer">documentation here</a>. For Ex- </p>
 
               <div className='text-center'>
                 <h2 className='text-xl font-bold mb-0.5'>Creating a button</h2>
@@ -98,7 +98,7 @@ function GettingStartedContent(){
                    {/* Chart JS */}
               <h2 id="getstarted5">Chart JS</h2>
                  <p>
-                 Chart JS library has rich components of different charts available. It is based on  <a href="https://www.chartjs.org/" target="_blank" alt=""> Chart.js</a> library, the most popular charting library. We have added this library and added couple of examples in seperate page.
+                 Chart JS library has rich components of different charts available. It is based on  <a href="https://www.chartjs.org/" target="_blank" alt="" rel="noreferrer"> Chart.js</a> library, the most popular charting library. We have added this library and added couple of examples in seperate page.
                  </p>
 
 
@@ -116,9 +116,9 @@ function GettingStartedContent(){
 
                   {/* Hero Icons */}
               <h2 id="getstarted7">Hero Icons</h2>
-                <p><a href="https://heroicons.com/" target="_blank" className='text-xl btn-link'>HeroIcons</a> library has been used for all the icons in this templates. It has a rich collection of SVG icons, and is made by the makers of Tailwind CSS.</p>
+                <p><a href="https://heroicons.com/" target="_blank" className='text-xl btn-link' rel="noreferrer">HeroIcons</a> library has been used for all the icons in this templates. It has a rich collection of SVG icons, and is made by the makers of Tailwind CSS.</p>
 
-                <p className='mt-4'>Each icon can be imported individually as a React component, check <a href="https://github.com/tailwindlabs/heroicons" target="_blank" className='btn-link'>documentation</a></p>
+                <p className='mt-4'>Each icon can be imported individually as a React component, check <a href="https://github.com/tailwindlabs/heroicons" target="_blank" className='btn-link' rel="noreferrer">documentation</a></p>
 
                 <pre><code>{"import BeakerIcon from '@heroicons/react/24/solid/BeakerIcon'"}</code></pre>
                 <p>Use as follows in your component</p>

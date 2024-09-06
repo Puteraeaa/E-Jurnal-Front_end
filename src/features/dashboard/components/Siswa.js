@@ -1,35 +1,72 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import TitleCard from "../../../components/Cards/TitleCard"; // Adjust the import path if necessary
+import jurnal from "../../../assets/Jurnal.png";
+import jurnalDark from "../../../assets/Jurnal-dark.png";
+import Cookies from "js-cookie";
+
+const user = JSON.parse(Cookies.get("user"));
+
+const userRole = user.roles;
+
 
 const Dashboard = () => {
   return (
     <>
-    
-      <div class="flex-auto p-4 bg card">
-        <div class="flex flex-wrap -mx-3">
-          <div class="max-w-full px-3 lg:w-1/2 lg:flex-none">
+      <div class="flex-auto p-4 bg-white dark:bg-[#1c2229] mb-10  md:w-[1530px]  shadow-md rounded-xl ">
+        <div class="flex flex-wrap-mx-3">
+          <div class="max-w-full px-3  lg:flex-none">
             <div class="flex flex-col h-full">
-              <p class="pt-2 mb-1 font-semibold">Built by developers</p>
-              <h5 class="font-bold">Soft UI Dashboard</h5>
-              <p class="mb-12">
-                From colors, cards, typography to complex elements, you will
-                find the full documentation.
+              <p class="pt-2 mb-1 font-semibold text-2xl">
+                Hai {user.name ? user.name.name : ""} <span className="text-3xl">👋</span>
               </p>
-              <a
-                class="mt-auto mb-0 font-semibold leading-normal text-sm group text-slate-500"
-                href="javascript:;"
-              >
-                Read More
-                <i class="fas fa-arrow-right ease-bounce text-sm group-hover:translate-x-1.25 ml-1 leading-normal transition-all duration-200"></i>
-              </a>
+              <h5 class="font-bold">Selamat Datang Di Website E-jurnal</h5>
+              <p class="mb-12 md:w-[800px]">
+                E-Jurnal PKL SMKN 1 Ciomas adalah platform digital bagi siswa
+                untuk mencatat kegiatan harian selama PKL dan melakukan absensi.
+              </p>
+              <div className="flex space-x-4 mb-4 mt-[-20px]">
+                <Link
+                  className="text-gray-800 font-bold leading-normal text-sm group text-slate-500 bg-gradient-to-tl from-blue-400 to-blue-500 w-36 py-2.5 rounded-xl text-center"
+                  to={"/app/laporan-pkl"}
+                >
+                  Lihat Jurnal
+                 
+                </Link>
+                
+                {userRole === "siswa" ? (
+                  <Link
+                    className="text-gray-800 font-bold leading-normal text-sm group text-slate-500 bg-gradient-to-tl from-green-400 to-green-500 w-36 py-2.5 rounded-xl text-center"
+                    to={"/app/absensi"}
+                  >
+                    Ayo Absen
+                   
+                  </Link>
+                ) : userRole === "guru" || userRole === "industri" || userRole === "orang tua" ? (
+                  <Link
+                    className="text-gray-800 font-bold leading-normal text-sm group text-slate-500 bg-gradient-to-tl from-green-400 to-green-500 w-36 py-2.5 rounded-xl text-center"
+                    to={"/app/rekap-absensi"}
+                  >
+                    Rekap Absen
+                   
+                  </Link>
+                ) : null}
+              </div>
             </div>
           </div>
-          <div class="max-w-full px-3 mt-12 ml-auto text-center lg:mt-0 lg:w-5/12 lg:flex-none">
-            <div class="h-full bg-gradient-to-tl from-purple-700 to-pink-500 rounded-xl">
-              {/* <img src="../assets/img/shapes/waves-white.svg" class="absolute top-0 hidden w-1/2 h-full lg:block" alt="waves"> */}
-              <div class="relative flex items-center justify-center h-full">
-                {/* <img class="relative z-20 w-full pt-6" src="../assets/img/illustrations/rocket-white.png" alt="rocket"> */}
+          <div class="max-w-full px-3 mt-12 ml-auto text-center lg:mt-0 lg:w-[500px] lg:flex-none">
+            <div class="h-full bg-gradient-to-t from-gray-200 to-gray-400 rounded-xl hidden dark:bg-gradient-to-t  dark:from-gray-700 dark:to-gray-800 lg:block">
+              <div class="relative flex items-center justify-center h-[200px] z-[1] ">
+                <img
+                  class="relative z-20 w-full h-full object-cover object-center  mt-2 dark:hidden block "
+                  src={jurnal}
+                  alt="rocket"
+                />
+                <img
+                  class="relative z-20 w-full h-full object-cover object-center  mt-2 hidden dark:block"
+                  src={jurnalDark}
+                  alt="rocket"
+                />
               </div>
             </div>
           </div>

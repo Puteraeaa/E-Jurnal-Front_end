@@ -84,7 +84,8 @@ const Leads = () => {
                     Authorization: `Bearer ${token}`,
                 }
             });
-            setSiswa(response.data.data);
+            setSiswa(response.data.data.data);
+            console.log(response.data.data.data);
             setPagination({
                 currentPage: response.data.current_page,
                 perPage: response.data.per_page,
@@ -112,7 +113,7 @@ const Leads = () => {
             });
     
             if (isConfirmed) {
-                const response = await Api.delete(`admin/industri/${leadId}`, {
+                const response = await Api.delete(`admin/users/${leadId}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     }

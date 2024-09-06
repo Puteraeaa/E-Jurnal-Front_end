@@ -19,10 +19,10 @@ const LeadDetailsModal = ({ lead, show, onClose }) => {
 
     return (
         <div className={`modal modal-open overflow-y-auto`}>
-            <div className="modal-box w-11/12 max-w-5xl h-auto p-6 relative bg-white shadow-lg rounded-lg">
+            <div className="modal-box w-11/12 max-w-5xl h-auto p-6 relative bg-white dark:bg-gray-800 shadow-lg rounded-lg">
                 <div className="absolute top-4 right-4 z-50">
                     <button
-                        className="text-gray-500 hover:text-gray-700"
+                        className="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-400"
                         onClick={handleClose}
                     >
                         <svg
@@ -47,100 +47,92 @@ const LeadDetailsModal = ({ lead, show, onClose }) => {
                         alt="Profile"
                         className="w-36 h-36 mx-auto rounded-full border-4 border-blue-500"
                     />
-                    <h3 className="text-2xl font-semibold mt-4">{lead.name}</h3>
-                    <h5 className="text-gray-500 mt-2">{lead.email}</h5>
+                    <h3 className="text-2xl font-semibold mt-4 dark:text-white">{lead.name}</h3>
+                    <h5 className="text-gray-500 dark:text-gray-400 mt-2">{lead.email}</h5>
                 </div>
-                <div className="bg-white p-4 mb-4 shadow rounded">
-                    <h3 className="text-lg font-semibold mb-3">Info Dasar</h3>
+                <div className="bg-white dark:bg-gray-700 p-4 mb-4 shadow rounded">
+                    <h3 className="text-lg font-semibold mb-3 dark:text-white">Info Dasar</h3>
                     <table className="w-full">
-                        <tbody className="text-sm font-medium text-gray-700">
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Nama</td>
+                        <tbody className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <tr className="border-b dark:border-gray-600">
+                                <td className="py-2 px-4 font-medium dark:text-gray-300">Nama</td>
                                 <td className="py-2 px-4">{lead.name}</td>
                             </tr>
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">NIS</td>
+                            <tr className="border-b dark:border-gray-600">
+                                <td className="py-2 px-4 font-medium dark:text-gray-300">NIS</td>
                                 <td className="py-2 px-4">{lead.nis}</td>
                             </tr>
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Kelas</td>
+                            <tr className="border-b dark:border-gray-600">
+                                <td className="py-2 px-4 font-medium dark:text-gray-300">Kelas</td>
                                 <td className="py-2 px-4">{lead.classes ? lead.classes.name : 'No Classroom'}</td>
                             </tr>
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Tempat Lahir</td>
+                            <tr className="border-b dark:border-gray-600">
+                                <td className="py-2 px-4 font-medium dark:text-gray-300">Tempat Lahir</td>
                                 <td className="py-2 px-4">{lead.dateOfBirth}</td>
                             </tr>
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Tanggal Lahir</td>
+                            <tr className="border-b dark:border-gray-600">
+                                <td className="py-2 px-4 font-medium dark:text-gray-300">Tanggal Lahir</td>
                                 <td className="py-2 px-4">{lead.placeOfBirth}</td>
                             </tr>
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Gender</td>
+                            <tr className="border-b dark:border-gray-600">
+                                <td className="py-2 px-4 font-medium dark:text-gray-300">Gender</td>
                                 <td className="py-2 px-4">{lead.gender}</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div className="bg-white p-4 shadow rounded mt-6">
-                    <h3 className="text-lg font-semibold mb-3">Info Lainnya</h3>
+                <div className="bg-white dark:bg-gray-700 p-4 shadow rounded mt-6">
+                    <h3 className="text-lg font-semibold mb-3 dark:text-white">Info Lainnya</h3>
                     <table className="w-full">
-                        <tbody className="text-sm font-medium text-gray-700">
-                            {/* <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Email</td>
-                                <td className="py-2 px-4">{lead.email}</td>
-                            </tr>
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">No. Telepon</td>
-                                <td className="py-2 px-4">{lead.notelp}</td>
-                            </tr> */}
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Alamaㅤㅤㅤ ㅤ</td>
-                                <td className="py-2 px-4 ">{lead.alamat}</td>
+                        <tbody className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <tr className="border-b dark:border-gray-600">
+                                <td className="py-2 px-4 font-medium dark:text-gray-300">Alama</td>
+                                <td className="py-2 px-4">{lead.alamat}</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div className="bg-white p-4 shadow rounded mt-6">
-                    <h3 className="text-lg font-semibold mb-3">Info Tempat PKL</h3>
+                <div className="bg-white dark:bg-gray-700 p-4 shadow rounded mt-6">
+                    <h3 className="text-lg font-semibold mb-3 dark:text-white">Info Tempat PKL</h3>
                     <table className="w-full">
-                        <tbody className="text-sm font-medium text-gray-700">
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Nama Tempat PKL </td>
+                        <tbody className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <tr className="border-b dark:border-gray-600">
+                                <td className="py-2 px-4 font-medium dark:text-gray-300">Nama Tempat PKL </td>
                                 <td className="py-2 px-4">{lead.industries ? lead.industries.name : 'No Teacher'}</td>
                             </tr>
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Bidang </td>
+                            <tr className="border-b dark:border-gray-600">
+                                <td className="py-2 px-4 font-medium dark:text-gray-300">Bidang </td>
                                 <td className="py-2 px-4">{lead.industries ? lead.industries.bidang : 'No Teacher'}</td>
                             </tr>
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Alamat Tempat PKL </td>
+                            <tr className="border-b dark:border-gray-600">
+                                <td className="py-2 px-4 font-medium dark:text-gray-300">Alamat Tempat PKL </td>
                                 <td className="py-2 px-4">{lead.industries ? lead.industries.alamat : 'No Teacher'}</td>
                             </tr>
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Nama Pembimbing </td>
+                            <tr className="border-b dark:border-gray-600">
+                                <td className="py-2 px-4 font-medium dark:text-gray-300">Nama Pembimbing </td>
                                 <td className="py-2 px-4">{lead.industries ? lead.industries.industryMentorName : 'No Telpon'}</td>
                             </tr>
 
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">No Telepon Pembimbing </td>
+                            <tr className="border-b dark:border-gray-600">
+                                <td className="py-2 px-4 font-medium dark:text-gray-300">No Telepon Pembimbing </td>
                                 <td className="py-2 px-4">{lead.industries ? lead.industries.industryMentorNo : 'No Telpon'}</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div className="bg-white p-4 shadow rounded mt-6">
-                    <h3 className="text-lg font-semibold mb-3">Info Guru Pembimbing</h3>
+                <div className="bg-white dark:bg-gray-700 p-4 shadow rounded mt-6">
+                    <h3 className="text-lg font-semibold mb-3 dark:text-white">Info Guru Pembimbing</h3>
                     <table className="w-full">
-                        <tbody className="text-sm font-medium text-gray-700">
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Namaㅤㅤ  ㅤ</td>
+                        <tbody className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <tr className="border-b dark:border-gray-600">
+                                <td className="py-2 px-4 font-medium dark:text-gray-300">Nama</td>
                                 <td className="py-2 px-4">{lead.teachers ? lead.teachers.name : 'No Teacher'}</td>
                             </tr>
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">No. Telepon</td>
+                            <tr className="border-b dark:border-gray-600">
+                                <td className="py-2 px-4 font-medium dark:text-gray-300">No. Telepon</td>
                                 <td className="py-2 px-4">{lead.teachers ? lead.teachers.no_hp : 'No Teacher'}</td>
                             </tr>
                         </tbody>

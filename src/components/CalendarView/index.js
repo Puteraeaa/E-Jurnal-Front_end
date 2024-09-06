@@ -3,6 +3,7 @@ import ChevronLeftIcon from "@heroicons/react/24/solid/ChevronLeftIcon";
 import ChevronRightIcon from "@heroicons/react/24/solid/ChevronRightIcon";
 import moment from "moment";
 import { CALENDAR_EVENT_STYLE } from "./util";
+import hasAnyPermission from "../../utils/Permissions";
 
 const THEME_BG = CALENDAR_EVENT_STYLE;
 
@@ -40,7 +41,7 @@ function CalendarView({ calendarEvents, addNewEvent, openDayDetail, onDateClick,
     };
 
     const getEventsForCurrentDate = (date) => {
-        let filteredEvents = events.filter(e => moment(date).isSame(moment(e.startTime), 'day'));
+        let filteredEvents = events.filter(e => moment(date).isSame(moment(e.start), 'day'));
         if (filteredEvents.length > 2) {
             let originalLength = filteredEvents.length;
             filteredEvents = filteredEvents.slice(0, 2);
@@ -51,9 +52,9 @@ function CalendarView({ calendarEvents, addNewEvent, openDayDetail, onDateClick,
 
     const openAllEventsDetail = (date, theme) => {
         if (theme !== "MORE") return;
-        let filteredEvents = events.filter(e => moment(date).isSame(moment(e.startTime), 'day'));
+        let filteredEvents = events.filter(e => moment(date).isSame(moment(e.start), 'day'));
         openDayDetail({ filteredEvents, title: moment(date).format("D MMM YYYY") });
-        onDateClick({ filteredEvents, title: moment(date).format("D MMM YYYY"),  });
+        onDateClick({ filteredEvents, title: moment(date).format("D MMM YYYY") });
     };
 
     const showEventDetails = (event) => {
@@ -92,26 +93,24 @@ function CalendarView({ calendarEvents, addNewEvent, openDayDetail, onDateClick,
                 <div className="flex items-center justify-between">
                     <div className="flex justify-normal gap-2 sm:gap-4">
                         <p className="font-semibold text-xl w-48">
-                            {moment(firstDayOfMonth).format("MMMM yyyy").toString()}<span className="text-xs ml-2 "></span>
+                            {moment(firstDayOfMonth).format("MMMM yyyy")}
                         </p>
-
-                            
                         <button className="btn btn-square btn-sm btn-ghost md:ml-[-30px]" onClick={getPrevMonth}>
                             <ChevronLeftIcon className="w-5 h-5" />
                         </button>
-                        <button className="btn btn-sm btn-ghost normal-case " onClick={getCurrentMonth}>
+                        <button className="btn btn-sm btn-ghost normal-case" onClick={getCurrentMonth}>
                             Bulan Ini
                         </button>
                         <button className="btn btn-square btn-sm btn-ghost" onClick={getNextMonth}>
                             <ChevronRightIcon className="w-5 h-5" />
                         </button>
-                           
-                        
                     </div>
                     <div>
+                    {hasAnyPermission(["siswa.delete", "guru.index", "orang-tua.index"]) && (
                         <button className="btn btn-sm w-15 btn-ghost btn-outline normal-case text-xs" onClick={addNewEvent}>
                             Tambah Jadwal
                         </button>
+                    )}
                     </div>
                 </div>
                 <div className="my-4 divider" />
@@ -126,24 +125,24 @@ function CalendarView({ calendarEvents, addNewEvent, openDayDetail, onDateClick,
                 <div className="grid grid-cols-7 mt-1 place-items-center">
                     {allDaysInMonth().map((day, idx) => (
                         <div key={idx} className={colStartClasses[moment(day).day()] + " border border-solid w-full h-28"}>
-                        <p
-                            className={`inline-block flex items-center justify-center h-10 w-8 md:h-10 md:w-10 rounded-full mx-1 mt-1 text-sm cursor-pointer hover:bg-base-300 ${isToday(day) && " bg-blue-100 dark:bg-blue-400 dark:hover:bg-base-300 dark:text-white"} ${isDifferentMonth(day) && " text-slate-400 dark:text-slate-600"}`}
-                            onClick={() => onDateClick(day)} // Pass the date to onDateClick
-                        >
-                            {moment(day).format("D")}
-                        </p>
-                        {
-                            getEventsForCurrentDate(day).map((e, k) => (
-                                <p
-                                    key={k}
-                                    onClick={() => e.theme === "MORE" ? openAllEventsDetail(day, e.theme) : showEventDetails(e)}
-                                    className={`text-xs px-2 mt-1 truncate ${THEME_BG[e.theme] || ""}`}
-                                >
-                                    {e.title}
-                                </p>
-                            ))
-                        }
-                    </div>
+                            <p
+                                className={`inline-block flex items-center justify-center h-10 w-8 md:h-10 md:w-10 rounded-full mx-1 mt-1 text-sm cursor-pointer hover:bg-base-300 ${isToday(day) && "bg-blue-100 dark:bg-blue-400 dark:hover:bg-base-300 dark:text-white"} ${isDifferentMonth(day) && "text-slate-400 dark:text-slate-600"}`}
+                                onClick={() => onDateClick(day)} // Pass the date to onDateClick
+                            >
+                                {moment(day).format("D")}
+                            </p>
+                            {
+                                getEventsForCurrentDate(day).map((e, k) => (
+                                    <p
+                                        key={k}
+                                        onClick={() => e.theme === "MORE" ? openAllEventsDetail(day, e.theme) : showEventDetails(e)}
+                                        className={`text-xs px-2 mt-1 truncate ${THEME_BG[e.theme] || ""}`}
+                                    >
+                                        {e.title}
+                                    </p>
+                                ))
+                            }
+                        </div>
                     ))}
                 </div>
             </div>

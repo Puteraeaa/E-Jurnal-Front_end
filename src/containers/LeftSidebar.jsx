@@ -8,6 +8,7 @@ import { useDispatch } from "react-redux";
 import Api from "../api";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
+import swal from "sweetalert2";
 
 function LeftSidebar() {
   const location = useLocation();
@@ -15,34 +16,45 @@ function LeftSidebar() {
   const dispatch = useDispatch();
   const token = Cookies.get("token");
   const user = JSON.parse(Cookies.get("user"));
-  console.log("User:", user);
+
 
   
 
-  const [classrooms, setClassrooms] = useState([]);
+  const [profile, setProfile] = useState([]);
 
   
-//   const getUser = async () => {
-//     try {
-//         const response = await Api.get(`/admin/student/${user.id}`, {
-//             headers: {
-//                 Authorization: `Bearer ${token}`,
-//             }
-//         });
-//         setClassrooms(response); 
-//         console.log('Response data kelas :', response);
-//     } catch (error) {
-//         console.error('Error fetching classrooms:', error.message);
-//     }
-// };
+  const getUser = async () => {
+    try {
+        const response = await Api.get(`/admin/users/${user.id}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        setProfile(response.data.data);
+    } catch (error) {
+        console.error("Error fetching user:", error.message);
+        
+    }
+};
 
-// useEffect(() => {
-//     getUser();
-// }, []);
+useEffect(() => {
+    getUser();
+}, []);
 
   const logout = async (e) => {
     e.preventDefault();
+    const result = await swal.fire({
+      title: "Konfirmasi Logout",
+      text: "Apakah Anda yakin ingin logout?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Ya, Logout!",
+    });
 
+
+    if (result.isConfirmed) {
     try {
       await Api.post("/logout");
 
@@ -65,7 +77,7 @@ function LeftSidebar() {
       });
       console.error("Logout error:", error);
     }
-  };
+  }};
 
   const close = () => {
     document.getElementById("left-sidebar-drawer").click();
@@ -98,13 +110,13 @@ function LeftSidebar() {
           className="p-4 flex items-center mb-1 mt-1 hover:bg-base-200 MR-2 ml-1"
         >
           <img
-            src={"/intro.png"}
+            src={profile.student?.image || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
             alt="Profile"
             className="w-12 h-12 rounded-full mr-5"
           />
           <div>
             {/* <div className="text-sm">{classrooms.roles}</div> */}
-            <div className="text-lg font-semibold">{user.name}</div>
+            <div className="text-lg font-semibold">{profile.name}</div>
           </div>
 
           <div className="divider mt-0 mb-0"></div>

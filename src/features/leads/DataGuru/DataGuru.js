@@ -26,9 +26,10 @@ const Leads = () => {
         .then(response => {
             const data = response.data.data.data || []; // Ensure the data is an array
             setGuru(Array.isArray(data) ? data : []);
-            console.log("Fetched data:", response.data.data); // Check the structure of fetched data
         })
-        .catch(error => console.error("Error fetching data:", error));
+        .catch(error => {
+         
+        });
     }, [token]);
 
     const filteredLeads = guru.filter(lead =>

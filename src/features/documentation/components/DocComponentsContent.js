@@ -74,7 +74,7 @@ function DocComponentsContent(){
                  {/* Cards */}
                  <h2 id="component3">Cards</h2>
                 <p>
-                    <a href="https://daisyui.com/components/card/" target="_blank">Daisy UI</a> already have many cards layout, on top of that we have added one card component that accept title props and shows children inside its body. Also there is a divider between title and body of card. On more provision has been added to add buttons on top left side of card using TopSideButtons props (check leads page).
+                    <a href="https://daisyui.com/components/card/" target="_blank" rel="noreferrer">Daisy UI</a> already have many cards layout, on top of that we have added one card component that accept title props and shows children inside its body. Also there is a divider between title and body of card. On more provision has been added to add buttons on top left side of card using TopSideButtons props (check leads page).
 
                 </p>
                 Ex - 

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import CalendarView from "../../components/CalendarView";
 import moment from "moment";
-import { CALENDAR_INITIAL_EVENTS } from "../../utils/dummyData";
 import { useDispatch } from "react-redux";
 import { openRightDrawer } from "../common/rightDrawerSlice";
 import { RIGHT_DRAWER_TYPES } from "../../utils/globalConstantUtil";
@@ -9,145 +8,226 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Select from "react-select";
 import swal from "sweetalert2";
+import Api from "../../api";
+import Cookies from "js-cookie";
+import momentTZ from "moment-timezone";
 
-
-
-
-const INITIAL_EVENTS = CALENDAR_INITIAL_EVENTS;
+const INITIAL_EVENTS = []; // Initialize as empty or with some default data if needed
 
 function Calendar() {
-    const dispatch = useDispatch();
-    const [events, setEvents] = useState(INITIAL_EVENTS);
-    const [selectedCompany, setSelectedCompany] = useState(null);
-    const [selectedDate, setSelectedDate] = useState(null);
-    const [modalInfo, setModalInfo] = useState(null);
+  const dispatch = useDispatch();
+  const [events, setEvents] = useState(INITIAL_EVENTS);
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [modalInfo, setModalInfo] = useState(null);
+  const [industri, setIndustri] = useState([]); // Ensure it's initialized as an empty array
+  const token = Cookies.get("token");
+  const user = JSON.parse(Cookies.get("user"));
 
-    const companyOptions = [
-        { value: 'Company A', label: 'Company A' },
-        { value: 'Company B', label: 'Company B' },
-        { value: 'Company C', label: 'Company C' }
-        // Add more options or fetch from database
-    ];
+  // Properly create companyOptions
+  const companyOptions = industri.map((company) => ({
+    value: company.id,
+    label: company.name
+  }));
 
-    const addNewEvent = () => {
-        const modal = document.getElementById('my_modal_1');
-        if (modal) {
-            modal.showModal();
+  const fetchEvents = async () => {
+    try {
+      const response = await Api.get("/admin/jadwal", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const data = response.data.data;
+      const formattedEvents = Object.keys(data).flatMap((date) => {
+        const groupDateMoment = momentTZ(date).tz("Asia/Jakarta");
+
+        return data[date].map((event) => {
+          const startDate = groupDateMoment.startOf("day").format("YYYY-MM-DD");
+          const endDate = groupDateMoment.endOf("day").format("YYYY-MM-DD");
+
+          return {
+            title: `${event.status} PKL ke ${event.industri_name}`,
+            start: startDate,
+            end: endDate,
+            company: event.user_name,
+            theme: event.status === "kunjungan" ? "BLUE" : "GREEN",
+            industri_name: event.industri_name
+          };
+        });
+      });
+
+      setEvents(formattedEvents);
+    } catch (error) {}
+  };
+
+  const fetchData = async () => {
+    try {
+      const response = await Api.get("admin/industri", {
+        headers: {
+          Authorization: `Bearer ${token}`
         }
-    };
+      });
+      setIndustri(response.data.data.data);
+    } catch (error) {}
+  };
 
-    const fixEvent = async () => {
-        const eventDate = document.getElementById('eventDate').value;
-        const eventType = document.getElementById('eventType').value;
-    
-        // Check if all required fields are filled
-        if (eventDate && eventType && selectedCompany) {
-            // Close the modal before showing SweetAlert2
-            const modal = document.getElementById('my_modal_1');
-            if (modal) {
-                modal.close();
+  useEffect(() => {
+    fetchEvents();
+    fetchData();
+  }, []);
+
+  const addNewEvent = () => {
+    const modal = document.getElementById("my_modal_1");
+    if (modal) {
+      modal.showModal();
+    }
+  };
+
+  const fixEvent = async () => {
+    const eventDate = document.getElementById("eventDate").value;
+    const eventType = document.getElementById("eventType").value;
+
+    if (eventDate && eventType && selectedCompany) {
+      const modal = document.getElementById("my_modal_1");
+      if (modal) {
+        modal.close();
+      }
+
+      const result = await swal.fire({
+        title: "Absen",
+        text: "Apakah Anda yakin ingin menambahkan jadwal?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Ya, absen!"
+      });
+
+      if (result.isConfirmed) {
+        const theme = eventType === "kunjungan" ? "ORANGE" : "GREEN";
+        const eventDateMoment = moment(eventDate).startOf("day");
+        const newEventObj = {
+          status: eventType,
+          date: eventDateMoment.format("YYYY-MM-DD"),
+          user_id: user.id,
+          industri_id: selectedCompany.value
+        };
+
+        try {
+          await Api.post("/admin/jadwal", newEventObj, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
             }
-    
-            // Show the SweetAlert2 confirmation dialog
-            const result = await swal.fire({
-                title: "Absen",
-                text: "Apakah Anda yakin ingin menambahkan jadwal?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Ya, absen!",
-            });
-    
-            // If user confirms, add the new event
-            if (result.isConfirmed) {
-                const title = `${eventType} ke ${selectedCompany.label}`;
-                const theme = eventType === 'kunjungan' ? 'ORANGE' : 'GREEN';
-                const newEventObj = {
-                    title,
-                    theme,
-                    startTime: moment(eventDate).startOf('day'),
-                    endTime: moment(eventDate).endOf('day'),
-                    company: selectedCompany.label,
-                };
-    
-                // Add the new event to the events list
-                setEvents([...events, newEventObj]);
-                if(result.isConfirmed){
-                    toast.success("New Event Added!");}
-               
+          });
+
+          // Create local start and end times for calendar display
+          const localStart = eventDateMoment.format("YYYY-MM-DD");
+          const localEnd = eventDateMoment.endOf("day").format("YYYY-MM-DD");
+
+          setEvents((prevEvents) => [
+            ...prevEvents,
+            {
+              ...newEventObj,
+              start: localStart,
+              end: localEnd,
+              title: `${eventType} ke ${selectedCompany.label}`,
+              theme
             }
-        } else {
-            // Show an error if required fields are missing
-            toast.error("Please fill in all required fields");
+          ]);
+          toast.success("New Event Added!");
+        } catch (error) {
+          toast.error("Error adding event. Please try again.");
         }
-    };
-    
-    
+      } else {
+        toast.error("Please fill in all required fields");
+      }
+    } else {
+      toast.error("Please fill in all required fields");
+    }
+  };
 
-    const onDateClick = (date) => {
-        const filteredEvents = events.filter(event =>
-            moment(date).isSame(moment(event.startTime), 'day')
-        );
+  const onDateClick = (date) => {
+    const filteredEvents = events.filter((event) =>
+      moment(date).isSame(moment(event.start), "day")
+    );
 
-        const title = moment(date).format("D MMM YYYY");
+    const title = moment(date).format("D MMM YYYY");
 
-        openDayDetail({ filteredEvents, title });
-    };
+    openDayDetail({ filteredEvents, title });
+  };
 
-    const openDayDetail = ({ filteredEvents, title }) => {
-        dispatch(openRightDrawer({
-            header: title,
-            bodyType: RIGHT_DRAWER_TYPES.CALENDAR_EVENTS,
-            extraObject: { filteredEvents }
-        }));
-    };
+  const openDayDetail = ({ filteredEvents, title }) => {
+    dispatch(
+      openRightDrawer({
+        header: title,
+        bodyType: RIGHT_DRAWER_TYPES.CALENDAR_EVENTS,
+        extraObject: { filteredEvents }
+      })
+    );
+  };
 
-    return (
-        <>
-            <CalendarView
-                calendarEvents={events}
-                addNewEvent={addNewEvent}
-                openDayDetail={openDayDetail}
-                onDateClick={onDateClick}
+  return (
+    <>
+      <CalendarView
+        calendarEvents={events}
+        addNewEvent={addNewEvent}
+        openDayDetail={openDayDetail}
+        onDateClick={onDateClick}
+      />
+
+      <dialog id="my_modal_1" className="modal">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">Tambah Jadwal</h3>
+          <form id="eventForm" className="py-4">
+            <label className="block mb-2">Tanggal:</label>
+            <input
+              type="date"
+              id="eventDate"
+              className="input input-bordered w-full mb-4"
+              required
             />
 
-            <dialog id="my_modal_1" className="modal">
-                <div className="modal-box">
-                    <h3 className="font-bold text-lg">Tambah Jadwal </h3>
-                    <form id="eventForm" className="py-4">
-                        <label className="block mb-2">Tanggal:</label>
-                        <input type="date" id="eventDate" className="input input-bordered w-full mb-4" required />
+            <label className="block mb-2">Tipe Event:</label>
+            <select
+              id="eventType"
+              className="select select-bordered w-full mb-4"
+              required
+            >
+              <option value="kunjungan">Kunjungan PKL</option>
+              <option value="keberangkatan">Keberangkatan PKL</option>
+            </select>
 
-                        <label className="block mb-2">Tipe Event:</label>
-                        <select id="eventType" className="select select-bordered w-full mb-4" required>
-                            <option value="kunjungan">Kunjungan PKL</option>
-                            <option value="keberangkatan">Keberangkatan PKL</option>
-                        </select>
+            <label className="block mb-2">Perusahaan:</label>
+            <Select
+              options={companyOptions}
+              value={selectedCompany}
+              onChange={setSelectedCompany}
+              placeholder="Select a company"
+              className="mb-4"
+              required
+            />
+          </form>
+          <div className="modal-action">
+            <button
+              onClick={fixEvent}
+              type="button"
+              className="pl-4 btn btn-success btn-sm hover:btn-primary"
+            >
+              Tambah
+            </button>
+            <button
+              onClick={() => document.getElementById("my_modal_1").close()}
+              type="button"
+              className="ml-4 btn btn-sm btn-error hover:btn-primary"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      </dialog>
 
-                        <label className="block mb-2">Perusahaan:</label>
-                        <Select
-                            options={companyOptions}
-                            value={selectedCompany}
-                            onChange={setSelectedCompany}
-                            placeholder="Select a company"
-                            className="mb-4"
-                            required
-                        />
-
-                    </form>
-                    <div className="modal-action">
-                        <button onClick={fixEvent } type="submit"  className="pl-4 btn btn-success btn-sm hover:btn-primary">Tambah</button>
-                        <button onClick={() => document.getElementById('my_modal_1').close()} className="ml-4 btn btn-sm btn-error hover:btn-primary">Tutup</button>
-                    </div>
-                </div>
-            </dialog>
-
-            
-
-            <ToastContainer />
-        </>
-    );
+      <ToastContainer />
+    </>
+  );
 }
 
 export default Calendar;

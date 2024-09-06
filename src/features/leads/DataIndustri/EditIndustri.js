@@ -129,7 +129,7 @@ const EditLeadPage = () => {
                 <p className="text-center border-b pb-4 mb-4">Silakan edit form di bawah!</p>
 
                 <form onSubmit={handleSubmit}>
-                    <div className="mb-4 hidden">
+                    <div className="mb-4 " hidden>
                         <label className="block text-gray-700 font-bold mb-2">User ID</label>
                         <input
                             type="text"

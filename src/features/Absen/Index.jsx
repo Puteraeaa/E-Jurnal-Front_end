@@ -3,9 +3,9 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import swal from "sweetalert2";
-import { Link } from "react-router-dom";
-import Api from "../../api";
 import Cookies from "js-cookie";
+import Api from "../../api";
+import { Link } from "react-router-dom";
 
 const AbsenceForm = () => {
   const [location, setLocation] = useState(null);
@@ -14,7 +14,7 @@ const AbsenceForm = () => {
   const [currentTime, setCurrentTime] = useState({
     hours: 0,
     minutes: 0,
-    seconds: 0,
+    seconds: 0
   });
   const [devices, setDevices] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState("");
@@ -22,45 +22,44 @@ const AbsenceForm = () => {
   const canvasRef = useRef(null);
   const token = Cookies.get("token");
 
-  const user = JSON.parse(Cookies.get('user'));
-
- 
-
-  // Function to update the current time every second
+  // Update current time every second
   useEffect(() => {
     const updateClock = () => {
       const now = new Date();
       setCurrentTime({
         hours: now.getHours(),
         minutes: now.getMinutes(),
-        seconds: now.getSeconds(),
+        seconds: now.getSeconds()
       });
     };
 
-    updateClock(); // Initial call to set time immediately
-    const intervalId = setInterval(updateClock, 1000); // Update time every second
+    updateClock();
+    const intervalId = setInterval(updateClock, 1000);
 
     return () => clearInterval(intervalId);
   }, []);
 
-  // Effect to fetch available video input devices (cameras)
+  // Enumerate video devices and set the default device
   useEffect(() => {
     navigator.mediaDevices.enumerateDevices().then((deviceInfos) => {
-      const videoDevices = deviceInfos.filter(device => device.kind === 'videoinput');
+      const videoDevices = deviceInfos.filter(
+        (device) => device.kind === "videoinput"
+      );
       setDevices(videoDevices);
       if (videoDevices.length > 0) {
-        setSelectedDeviceId(videoDevices[0].deviceId); // Default to the first camera
+        setSelectedDeviceId(videoDevices[0].deviceId);
       }
     });
   }, []);
 
-  // Effect to start the camera when the modal is shown
+  // Start the camera when modal is shown
   useEffect(() => {
     if (showModal) {
-      startCamera(); // Start the camera when modal is shown
+      startCamera();
     }
   }, [showModal, selectedDeviceId]);
 
+  // Reverse geocode to get the address from latitude and longitude
   const reverseGeocode = async (latitude, longitude) => {
     try {
       const response = await axios.get(
@@ -68,55 +67,75 @@ const AbsenceForm = () => {
       );
       return response.data.display_name;
     } catch (error) {
-      console.error("Error during reverse geocoding:", error.message);
       return "Alamat tidak ditemukan";
     }
   };
 
+  // Handle getting the user's location
   const handleGetLocation = async () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        const address = await reverseGeocode(lat, lon);
-        setLocation({
-          latitude: lat,
-          longitude: lon,
-        });
+    // Log state before change
 
-        setShowModal(true); // Show the modal when location is obtained
-      });
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const address = await reverseGeocode(lat, lon);
+          setLocation({ latitude: lat, longitude: lon });
+
+          // Update state
+          setShowModal(true);
+
+          // Log state after change
+        },
+        (error) => {
+          toast.error(
+            "Tidak dapat mengakses lokasi. Pastikan Anda memberi izin."
+          );
+        }
+      );
     } else {
-      toast.error("Geolocation is not supported by this browser.");
+      toast.error("Geolocation tidak didukung oleh browser ini.");
     }
   };
 
+  // Start the camera for capturing photo
   const startCamera = () => {
     navigator.mediaDevices
-      .getUserMedia({ video: { deviceId: selectedDeviceId } }) // Use selected device
+      .getUserMedia({ video: { deviceId: selectedDeviceId } })
       .then((stream) => {
         videoRef.current.srcObject = stream;
       })
       .catch((err) => {
-        console.error("Error accessing webcam: ", err.message);
-        toast.error("Tidak dapat mengakses kamera. Pastikan Anda memberi izin.");
+        toast.error(
+          "Tidak dapat mengakses kamera. Pastikan Anda memberi izin."
+        );
       });
   };
 
+  // Capture the photo from the video stream
   const handleCapturePhoto = () => {
     const context = canvasRef.current.getContext("2d");
-    context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+    context.drawImage(
+      videoRef.current,
+      0,
+      0,
+      canvasRef.current.width,
+      canvasRef.current.height
+    );
     const dataUrl = canvasRef.current.toDataURL("image/jpeg");
     setPhoto(dataUrl);
   };
 
+  // Format date to YYYY-MM-DD
   const formatDate = (date) => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
-  
+
+  // Handle submission of the attendance form
   const handleSubmit = async () => {
     const result = await swal.fire({
       title: "Absen",
@@ -125,84 +144,76 @@ const AbsenceForm = () => {
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Ya, absen!",
+      confirmButtonText: "Ya, absen!"
     });
-  
+
     if (result.isConfirmed) {
       const now = new Date();
-      const newEntry = {
-        date: formatDate(now), // Use formatted date
-        departureTime: formatTime(currentTime.hours, currentTime.minutes, currentTime.seconds),
-        arrivalTime: formatTime(currentTime.hours, currentTime.minutes, currentTime.seconds),
-        absenceReason: 'hadir',
-        longitude: location ? location.longitude : null,
-        latitude: location ? location.latitude : null,
-      };
-  
-      try {
-        // Convert the base64 image to a Blob
-        const base64Data = photo.split(',')[1];
+      const formData = new FormData();
+      formData.append("date", formatDate(now));
+      formData.append(
+        "time",
+        formatTime(currentTime.hours, currentTime.minutes, currentTime.seconds)
+      );
+      formData.append("absenceReason", "hadir");
+      formData.append("longitude", location ? location.longitude : null);
+      formData.append("latitude", location ? location.latitude : null);
+
+      if (photo) {
+        const base64Data = photo.split(",")[1];
         const byteCharacters = atob(base64Data);
         const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
         const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'image/jpeg' });
-  
-        // Create FormData and append the Blob as a file
-        const formData = new FormData();
-        formData.append('date', newEntry.date);
-        formData.append('departureTime', newEntry.departureTime);
-        // formData.append('arrivalTime', newEntry.arrivalTime);
-        formData.append('absenceReason', newEntry.absenceReason);
-        formData.append('longitude', newEntry.longitude);
-        formData.append('latitude', newEntry.latitude);
-        formData.append('image', blob, 'photo.jpg'); // Append the Blob as a .jpg file
-  
-        const response = await Api.post('/admin/absence', formData, {
+        const blob = new Blob([byteArray], { type: "image/jpeg" });
+        formData.append("image", blob, "photo.jpg");
+      }
+
+      try {
+        const apiUrl = "/admin/absence";
+        const response = await Api.post(apiUrl, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data', // Ensure the request is treated as multipart
-          },
+            "Content-Type": "multipart/form-data"
+          }
         });
-  
-        toast.success(response.data.message, { 
+
+        toast.success(response.data.message, {
           position: "top-right",
-          duration: 4000,
+          duration: 4000
         });
-  
+
         clearForm();
         setShowModal(false);
       } catch (error) {
-        console.error("Error submitting attendance:", error.response ? error.response.data : error.message);
-  
-        if (error.response && error.response.data) {
-          toast.error(`Gagal melakukan absen. ${error.response.data.message || "Periksa kembali input Anda."}`, {
-            position: "top-right",
-            duration: 4000,
-          });
-        } else {
-          toast.error("Gagal melakukan absen. Periksa kembali input Anda.", {
-            position: "top-right",
-            duration: 4000,
-          });
-        }
+        const errorMessage = error.response?.data?.error || error.message;
+        
+
+        toast.error(`Gagal melakukan absen. ${errorMessage}`, {
+          position: "top-right",
+          duration: 4000
+        });
       }
     }
   };
 
-  
+  // Format time to HH:MM:SS
   const formatTime = (hours, minutes, seconds) => {
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+      2,
+      "0"
+    )}:${String(seconds).padStart(2, "0")}`;
   };
-  
 
+  // Reset the camera to capture a new photo
   const handleResetCamera = () => {
     setPhoto(null);
     startCamera();
   };
 
+  // Clear the form after submission
   const clearForm = () => {
     setLocation(null);
     setPhoto(null);
@@ -238,26 +249,31 @@ const AbsenceForm = () => {
         </div>
       </div>
 
-      <Link className="btn btn-primary mt-6 text-white mx-auto" to='/app/rekap-absensi'> Riwayat Absen</Link>
-
+      <Link
+        className="btn btn-primary mt-6 text-white mx-auto"
+        to="/app/rekap-absensi"
+      >
+        {" "}
+        Riwayat Absen
+      </Link>
 
       {showModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 md:w-1/3 relative">
+          <div className="bg-white dark:bg-[#1c2229] p-6 rounded-lg shadow-lg w-11/12 md:w-1/3 relative">
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-2 right-2 text-gray-600 hover:text-gray-900 text-2xl cursor-pointer"
+              className="absolute top-2 right-2 text-gray-600 hover:text-gray-400 text-2xl cursor-pointer"
             >
               ✕
             </button>
-            <h3 className="font-bold text-lg md:text-3xl">Absen Siswa PKL</h3>
+            <h2 className="font-bold text-lg md:text-3xl dark:text-white">Absen Siswa PKL</h2>
 
-            <label htmlFor="camera-select" className="block mt-4">
+            <label htmlFor="camera-select" className="block mt-4 dark:text-white">
               Pilih Kamera:
             </label>
             <select
               id="camera-select"
-              className="mt-2 p-2 bg-gray-100 text-black-100 rounded-md"
+              className="mt-2 p-2 bg-gray-100 text-black-100 dark:bg-gray-700  rounded-md cursor-pointer"
               onChange={(e) => setSelectedDeviceId(e.target.value)}
               value={selectedDeviceId}
             >
@@ -271,18 +287,16 @@ const AbsenceForm = () => {
             {photo ? (
               <>
                 <img
-           
-                 src={photo}
-                 alt="Preview"
-                 className="mt-4 w-full h-auto mx-auto cursor-pointer object-cover"
-               />
-               
-
+                  src={photo}
+                  alt="Preview"
+                  className="mt-4 w-full h-auto mx-auto cursor-pointer object-cover"
+                />
                 <button
                   onClick={handleResetCamera}
-                  className="mt-4 p-2 bg-yellow-500 text-white rounded-md w-[200px] md:text-xl md:hover:bg-yellow-700"
+                  className="mt-4 p-2 bg-gray-100 dark:bg-gray-700 text-black-100 text-1xl rounded-md shadow-md"
                 >
-                  Reset Camera
+                  {photo ? "Ambil Ulang" : "Ambil Foto"}
+                  <i className="fa-solid fa-camera ml-2"></i>
                 </button>
               </>
             ) : (
@@ -290,13 +304,13 @@ const AbsenceForm = () => {
                 <video
                   ref={videoRef}
                   autoPlay
-                  className="mt-4 w-[1920px] h-[400px] mx-auto object-cover cursor-pointer"
+                  className="mt-4 w-full h-auto mx-auto object-cover cursor-pointer"
                 ></video>
                 <button
                   onClick={handleCapturePhoto}
-                  className="mt-4 p-2 bg-gray-100 text-black-100 text-1xl rounded-md shadow-md"
+                  className="mt-4 p-2 bg-gray-100 text-black-100 text-1xl rounded-md shadow-md dark:bg-gray-700"
                 >
-                  {photo ? "Take Again" : "Take Photo"}
+                  {photo ? "Ambil Ulang" : "Ambil Foto"}
                   <i className="fa-solid fa-camera ml-2"></i>
                 </button>
                 <canvas ref={canvasRef} className="hidden"></canvas>
@@ -307,7 +321,7 @@ const AbsenceForm = () => {
                 onClick={handleSubmit}
                 className="mt-4 p-2 bg-blue-500 text-white rounded-md w-[200px] md:text-xl md:hover:bg-blue-700"
               >
-                Submit
+                Absen
               </button>
             </div>
           </div>

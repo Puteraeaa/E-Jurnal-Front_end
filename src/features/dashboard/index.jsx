@@ -12,7 +12,8 @@ import LineChart from "./components/LineChart";
 import BarChart from "./components/BarChart";
 
 // siswa component
-import SiswaPage from "./components/Siswa";
+import  SiswaPage  from "./components/Siswa";
+import  SiswaPage2 from "./components/Siswa-2";
 
 // guru component
 
@@ -65,12 +66,25 @@ function Dashboard() {
   return (
     <>
       {/** ---------------------- Select Period Content ------------------------- */}
-        {/* {hasAnyPermission(["absen.index"]) && (
+      {hasAnyPermission(["murid.index", "guru.index", "orang-tua.index"]) && (
+        <>
             <div className="grid lg:grid-cols-2 mt-1 grid-cols-1 gap-6">
             <SiswaPage/>
-          </div>
-        )} */}
-      
+         
+          
+            
+            </div>
+
+<div className="grid  mt-1 grid-cols-1 ">
+
+
+<SiswaPage2/>
+
+</div>
+
+</>
+ 
+        )}
 
       {/** ---------------------- Different stats content 1 ------------------------- */}
 

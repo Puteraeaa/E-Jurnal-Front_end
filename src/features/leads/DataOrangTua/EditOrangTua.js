@@ -1,94 +1,217 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import Api from '../../../api';
+import Cookies from 'js-cookie';
+import { toast } from 'react-hot-toast';
 
-const staticLeads = [
-    {
-        id: "01",
-        name: "Budi Santoso",
-        email: "budisantoso@gmail.com",
-        namaAnak: "Andi Santoso"
-    },
-    {
-        id: "02",
-        name: "Joko",
-        email: "Joko.owi@gmail.com",
-        namaAnak: "Rina Joko"
-    },
-];;
+const token = Cookies.get('token');
 
-
-const EditLeadPage = () => {
-    const { id } = useParams(); // Get the lead ID from the URL
+const EditParentPage = () => {
     const navigate = useNavigate();
-    const [formData, setFormData] = useState({ name: '', email: '', namaAnak: '' });
-    const lead = staticLeads.find((lead) => lead.id === id); // Find the lead by ID
+    const { id } = useParams();
+    const [formData, setFormData] = useState({
+        user_id: "",
+        nama: "",
+        placeOfBirth: "",
+        dateOfBirth: "",
+        gender: "",
+        alamat: "",
+        occupation:"",
+        phoneNumber:"",
 
-    useEffect(() => {
-        if (lead) {
-            setFormData({ ...lead });
-        } else {
-            // Handle case where the lead is not found
-            // e.g., navigate to a 404 page or show an error message
-            navigate('/404');
+    });
+
+    const fetchParentData = async () => {
+        try {
+            const response = await Api.get(`admin/parent/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const parent = response.data.data;
+            console.log(parent);
+            setFormData({
+                user_id: parent.user_id || "",
+                nama: parent.users ? parent.users.name : "",
+                placeOfBirth: parent.placeOfBirth || "",
+                dateOfBirth: parent.dateOfBirth || "",
+                gender: parent.gender || "",
+                alamat: parent.alamat || "",
+                occupation: parent.occupation || "",
+                phoneNumber: parent.phoneNumber || "",
+            });
+        } catch (error) {
+            console.error("Error fetching parent data:", error);
+            toast.error("Failed to load parent data.", {
+                position: "top-right",
+                duration: 4000,
+            });
         }
-    }, [lead, id, navigate]);
+    };
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prevData) => ({ ...prevData, [name]: value }));
+        const { name, value, type, files } = e.target;
+        setFormData((prevData) => ({
+            ...prevData,
+            [name]: type === 'file' ? files[0] : value
+        }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Update the lead data logic here
-        // Since staticLeads is a constant, you would need a way to update this data
-        // For now, navigate back after submitting
-        navigate('/data/guru');
-    };
+        try {
+            await Api.put(`admin/parent/62`, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            toast.success("Parent data updated successfully!", {
+                position: "top-right",
+                duration: 4000,
+            });
+            navigate('/app/data/orangtua');
+        } catch (error) {
+            if (error.response) {
+                console.error("Error response data:", error.response.data);
 
+                const errorMessages = error.response.data.errors;
+                if (errorMessages) {
+                    for (const [field, messages] of Object.entries(errorMessages)) {
+                        console.error(`Field: ${field}, Errors: ${messages.join(', ')}`);
+                    }
+                    toast.error(`Failed to update parent data: ${Object.values(errorMessages)[0][0]}`, {
+                        position: "top-right",
+                        duration: 4000,
+                    });
+                } else {
+                    toast.error(`Failed to update parent data: ${error.response.data.message || 'Please check the form fields.'}`, {
+                        position: "top-right",
+                        duration: 4000,
+                    });
+                }
+            } else {
+                console.error("Error updating parent data:", error);
+                toast.error("Failed to update parent data.", {
+                    position: "top-right",
+                    duration: 4000,
+                });
+            }
+        }
+    };
+    
+    useEffect(() => {
+        fetchParentData();
+    }, [id]);
+    
     return (
-        <div className="container mx-auto px-4 py-6">
-            <h3 className="font-bold text-2xl sm:text-3xl text-center mb-10">Edit Data Orang Tua</h3>
-            <form onSubmit={handleSubmit} className="max-w-lg mx-auto space-y-4">
-                <div className="mb-4">
-                    <label className="block mb-2 font-bold">Nama Orang Tua:</label>
-                    <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        className="input input-bordered w-full"
-                        required
-                    />
-                </div>
-                <div className="mb-4">
-                    <label className="block mb-2 font-bold">Email Orang Tua:</label>
-                    <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        className="input input-bordered w-full"
-                        required
-                    />
-                </div>
-                <div className="mb-4">
-                    <label className="block mb-2 font-bold">Nama Anak:</label>
-                    <textarea
-                        name="alamat"
-                        value={formData.namaAnak}
-                        onChange={handleChange}
-                        className="textarea textarea-bordered w-full"
-                        required
-                    />
-                </div>
-                <div className="flex justify-between gap-2">
-                    <button type="submit" className="btn btn-primary w-1/2" onClick={() => navigate('/app/data/orangtua')}>Save</button>
-                    <button type="button" className="btn border-black w-1/2" onClick={() => navigate('/app/data/orangtua')}>Cancel</button>
-                </div>
-            </form>
+        <div className="container mx-auto my-10 px-4">
+            <div className="bg-white shadow-lg rounded-lg p-6 border-t-4 border-blue-500">
+                <h1 className="text-3xl font-bold text-center mb-4">Edit Data Orang Tua</h1>
+                <p className="text-center border-b pb-4 mb-4">Silakan update form di bawah!</p>
+
+                <form onSubmit={handleSubmit}>
+                   
+
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Nama Orang Tua</label>
+                        <input
+                            type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Jenis Kelamin</label>
+                        <select
+                            name="gender"
+                            value={formData.gender}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        >
+                            <option value="">Pilih Jenis Kelamin</option>
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                        </select>
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Tempat Lahir</label>
+                        <input
+                            type="text"
+                            name="placeOfBirth"
+                            value={formData.placeOfBirth}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Tanggal Lahir</label>
+                        <input
+                            type="date"
+                            name="dateOfBirth"
+                            value={formData.dateOfBirth}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                   
+
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Alamat</label>
+                        <textarea
+                            name="alamat"
+                            value={formData.alamat}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            rows="4"
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Pekerjaan</label>
+                        <input
+                            type="text"
+                            name="occupation"
+                            value={formData.occupation}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Nomer Telepon</label>
+                        <input
+                            type="text"
+                            name="phoneNumber"
+                            value={formData.phoneNumber}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div className="flex justify-between gap-2">
+                        <button
+                            type="submit"
+                            className="w-full px-4 py-2 text-white bg-blue-500 hover:bg-blue-700 rounded-lg"
+                        >
+                            Save
+                        </button>
+                        <button
+                            type="button"
+                            className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg"
+                            onClick={() => navigate('/app/data/orangtua')}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     );
 };
 
-export default EditLeadPage;
+export default EditParentPage;

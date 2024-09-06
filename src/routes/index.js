@@ -33,6 +33,7 @@ const Team = lazy(() => import('../pages/protected/Team'))
 const Transactions = lazy(() => import('../pages/protected/Transactions'))
 const Bills = lazy(() => import('../pages/protected/Bills'))
 const ProfileSettings = lazy(() => import('../pages/protected/ProfileSettings'))
+const editProfile = lazy(() => import('../pages/protected/EditProfile'))
 const Absen = lazy(() => import('../pages/protected/Absen'))
 const Rekap = lazy(() => import('../pages/protected/Rekap'))
 
@@ -42,7 +43,8 @@ const AddLaporan = lazy(() => import('../features/Laporan/Add-Laporan'))
 const DetailLAporan = lazy(() => import('../features/Laporan/DetailLaporan'))
 const Editlaporan = lazy(() => import('../features/Laporan/Edit-Laporan'))
 
-const Jurusan = lazy(() => import('../pages/protected/Jurusan/Index'))
+const Jurusan = lazy(() => import('../pages/protected/Jurusan-Kelas/Index'))
+const Kelas = lazy(() => import('../pages/protected/Jurusan-Kelas/Kelas'))
 
 
 // nilai
@@ -126,6 +128,10 @@ const routes = [
     component: ProfileSettings,
   },
   {
+    path: '/edit-profile/',
+    component: editProfile,
+  },
+  {
     path: '/settings-billing',
     component: Bills,
   },
@@ -170,6 +176,10 @@ const routes = [
   {
     path: '/data-kejuruan',
     component: Jurusan,
+  },
+  {
+    path: '/data-kelas',
+    component: Kelas,
   },
   {
     path: '/rekapnilai',

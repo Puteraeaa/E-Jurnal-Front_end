@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
+// Buat instance Axios
 const Api = axios.create({
   baseURL: 'http://127.0.0.1:8000/api/',
   headers: {
@@ -8,6 +9,17 @@ const Api = axios.create({
     "Content-Type": "application/json",
   }
 });
+
+// Counter untuk menghitung jumlah request
+let requestCount = 0;
+
+Api.interceptors.request.use(request => {
+  requestCount++;
+  console.log(`Total API requests: ${requestCount}`);
+  return request;
+});
+
+
 
 Api.interceptors.response.use(
   function (response) {

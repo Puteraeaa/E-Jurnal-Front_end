@@ -10,8 +10,10 @@ const token = Cookies.get('token');
 const AddLeadPage = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        user_id: "",
         name: "",
+        password: "",
+        password_confirmation: "",
+        roles: "industri",
         bidang: "",
         alamat: "",
         longitude: "",
@@ -28,7 +30,7 @@ const AddLeadPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await Api.post('admin/industri', formData, {
+            await Api.post('admin/users', formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -40,16 +42,11 @@ const AddLeadPage = () => {
             navigate('/app/data/industri');
         } catch (error) {
             if (error.response) {
-                // Log the entire error response
-                console.error("Error response data:", error.response.data);
-    
-                // Extract and display field-specific errors
                 const errorMessages = error.response.data.errors;
                 if (errorMessages) {
                     for (const [field, messages] of Object.entries(errorMessages)) {
                         console.error(`Field: ${field}, Errors: ${messages.join(', ')}`);
                     }
-                    // Optionally, display the first error message
                     toast.error(`Failed to add lead: ${Object.values(errorMessages)[0][0]}`, {
                         position: "top-right",
                         duration: 4000,
@@ -109,18 +106,6 @@ const AddLeadPage = () => {
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">User ID</label>
-                        <input
-                            type="text"
-                            name="user_id"
-                            value={formData.user_id}
-                            onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                            required
-                        />
-                    </div>
-
-                    <div className="mb-4">
                         <label className="block text-gray-700 font-bold mb-2">Nama Industri</label>
                         <input
                             type="text"
@@ -128,6 +113,42 @@ const AddLeadPage = () => {
                             value={formData.name}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Password</label>
+                        <input
+                            type="password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Password Confirmation</label>
+                        <input
+                            type="password"
+                            name="password_confirmation"
+                            value={formData.password_confirmation}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Roles</label>
+                        <input
+                            type="text"
+                            name="roles"
+                            value={formData.roles}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            readOnly
                             required
                         />
                     </div>

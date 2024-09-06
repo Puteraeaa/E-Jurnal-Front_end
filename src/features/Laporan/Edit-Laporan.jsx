@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ReactQuill from "react-quill";
-import 'react-quill/dist/quill.snow.css';
+import "react-quill/dist/quill.snow.css";
 import Api from "../../api";
 import Cookies from "js-cookie";
 import swal from "sweetalert2";
@@ -22,15 +22,15 @@ export default function EditUser() {
 
   useEffect(() => {
     // Set the default date to today's date
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     setTanggal(today);
 
     const fetchReport = async () => {
       try {
         const response = await Api.get(`admin/jurnal/${id}`, {
           headers: {
-            Authorization: `Bearer ${token}`,
-          },
+            Authorization: `Bearer ${token}`
+          }
         });
         const report = response.data.data;
         setJudul(report.judul || "");
@@ -39,9 +39,7 @@ export default function EditUser() {
         setStartTime(report.start_time || "");
         setEndTime(report.end_time || "");
         setTools(report.tools || "");
-      } catch (error) {
-        console.error('Error fetching report:', error.response);
-      }
+      } catch (error) {}
     };
 
     fetchReport();
@@ -49,11 +47,13 @@ export default function EditUser() {
 
   const updateUser = async (e) => {
     e.preventDefault();
-    console.log({ judul, deskripsi, tanggal, startTime, endTime, tools, image });
 
     // Validasi minimal 150 karakter untuk deskripsi
     const newErrors = {};
-    if (deskripsi.length < 150) newErrors.deskripsi = ["Deskripsi harus terdiri dari minimal 150 karakter"];
+    if (deskripsi.length < 150)
+      newErrors.deskripsi = [
+        "Deskripsi harus terdiri dari minimal 150 karakter"
+      ];
     if (!tanggal) newErrors.tanggal = ["Tanggal Wajib diisi"];
     if (!startTime) newErrors.start_time = ["Start Time Wajib diisi"];
     if (!endTime) newErrors.end_time = ["End Time Wajib diisi"];
@@ -72,45 +72,41 @@ export default function EditUser() {
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
         cancelButtonColor: "#d33",
-        confirmButtonText: "Ya, Perbarui!",
+        confirmButtonText: "Ya, Perbarui!"
       });
 
       if (result.isConfirmed) {
         const formData = new FormData();
-        formData.append('description', deskripsi);
-        formData.append('start_time', startTime);
-        formData.append('end_time', endTime);
-        formData.append('tools', tools);
-        formData.append('date', tanggal);
-        if (image) formData.append('image', image);
-        
+        formData.append("description", deskripsi);
+        formData.append("start_time", startTime);
+        formData.append("end_time", endTime);
+        formData.append("tools", tools);
+        formData.append("date", tanggal);
+        if (image) formData.append("image", image);
 
         for (let [key, value] of formData.entries()) {
-            console.log(key, value);
-          }
+        }
 
         await Api.patch(`admin/jurnal/${id}`, formData, {
           headers: {
-            Authorization: `Bearer ${token}`,
-            
-          },
+            Authorization: `Bearer ${token}`
+          }
         });
 
-        toast.success('Program updated successfully!', {
+        toast.success("Program updated successfully!", {
           position: "top-right",
-          duration: 4000,
+          duration: 4000
         });
 
         navigate(`/app/detail-laporan/${id}`);
       }
     } catch (error) {
-      console.error('Error updating program:', error);
-      toast.error('Failed to update program. Please try again later.', {
+      toast.error("Failed to update program. Please try again later.", {
         position: "top-right",
-        duration: 4000,
+        duration: 4000
       });
     }
-  }
+  };
 
   return (
     <div className="container mx-auto my-10">
@@ -124,7 +120,6 @@ export default function EditUser() {
           </p>
 
           <form onSubmit={updateUser}>
-
             <div className="mb-4">
               <label className="block text-gray-700 font-bold mb-2">
                 Deskripsi Laporan

@@ -5,7 +5,7 @@ export default function hasAnyPermission(requiredPermissions) {
         // Get permissions from cookies
         const permissionsStr = Cookies.get('permissions');
         if (!permissionsStr) {
-            console.error('Permissions cookie is missing');
+          
             return false;
         }
 
@@ -15,7 +15,7 @@ export default function hasAnyPermission(requiredPermissions) {
         // Check if any of the required permissions exist in the array
         return requiredPermissions.some(permission => allPermissions.includes(permission));
     } catch (error) {
-        console.error('Error parsing permissions cookie:', error);
+        
         return false;
     }
 }
