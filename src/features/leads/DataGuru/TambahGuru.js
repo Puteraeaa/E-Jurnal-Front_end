@@ -10,10 +10,11 @@ const AddTeacherPage = () => {
     const navigate = useNavigate();
     const [jurusan, setJurusan] = useState([]);
     const [formData, setFormData] = useState({
+        username: "",
         name: "",
         password: "",
         password_confirmation: "",
-        roles: "guru", // Force the role to "guru"
+        roles: "guru", 
         no_hp: "",
         departemen_id: "",
     });
@@ -33,14 +34,14 @@ const AddTeacherPage = () => {
             Object.keys(formData).forEach(key => {
                 data.append(key, formData[key]);
             });
-
+    
             await Api.post('admin/users', data, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data',
                 },
             });
-
+    
             toast.success("Teacher added successfully!", {
                 position: "top-right",
                 duration: 4000,
@@ -49,10 +50,8 @@ const AddTeacherPage = () => {
         } catch (error) {
             if (error.response) {
                 const errorMessages = error.response.data.errors;
+                console.error("Error response data:", error.response.data);
                 if (errorMessages) {
-                    for (const [field, messages] of Object.entries(errorMessages)) {
-                       
-                    }
                     toast.error(`Failed to add teacher: ${Object.values(errorMessages)[0][0]}`, {
                         position: "top-right",
                         duration: 4000,
@@ -64,7 +63,6 @@ const AddTeacherPage = () => {
                     });
                 }
             } else {
-               
                 toast.error("Failed to add teacher.", {
                     position: "top-right",
                     duration: 4000,
@@ -72,6 +70,7 @@ const AddTeacherPage = () => {
             }
         }
     };
+    
 
     useEffect(() => {
         Api.get("admin/departemen", {
@@ -105,6 +104,18 @@ const AddTeacherPage = () => {
                     </div>
 
                     <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Username</label>
+                        <input
+                            type="text"
+                            name="username"
+                            value={formData.username}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-4">
                         <label className="block text-gray-700 font-bold mb-2">Password</label>
                         <input
                             type="text"
@@ -128,16 +139,6 @@ const AddTeacherPage = () => {
                         />
                     </div>
 
-                    <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Roles</label>
-                        <input
-                            type="text"
-                            name="roles"
-                            value={formData.roles}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                            required
-                        />
-                    </div>
 
                     <div className="mb-4">
                         <label className="block text-gray-700 font-bold mb-2">No Telephone</label>

@@ -3,8 +3,8 @@ import axios from 'axios'; // Import axios for API requests
 import Cookies from 'js-cookie';
 import Api from '../../api';
 import hasAnyPermission from '../../utils/Permissions';
-
-
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const InfoPanduanPKL = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -12,7 +12,6 @@ const InfoPanduanPKL = () => {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
   const token = Cookies.get("token"); // Get token from cookies
-
 
   const fetchPdf = async () => {
     try {
@@ -36,16 +35,16 @@ const InfoPanduanPKL = () => {
       const latestDocument = response.data.data.data[0];
       setPdfUrl(latestDocument.dokumen);
   
-      console.log("Latest PDF URL:", latestDocument.dokumen);
-  
     } catch (error) {
       console.error("Error fetching PDF:", error.message);
+      toast.error("Error fetching PDF.", { position: "top-right", duration: 4000 });
     }
   };
   
-useEffect(() => {
-  fetchPdf();
-})
+  useEffect(() => {
+    fetchPdf();
+  }, []);
+  
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     setSelectedFile(file);
@@ -65,17 +64,21 @@ useEffect(() => {
             'Content-Type': 'multipart/form-data',
           },
         });
-        console.log("File uploaded successfully:", response.data);
+       
         setFileName(''); // Clear the file name after successful upload
         setSelectedFile(null); // Clear the selected file
         toggleFormVisibility(); // Hide the form
+        toast.success("File uploaded successfully!", {
+          position: "top-right",
+          duration: 4000,
+        });
         fetchPdf(); // Refetch the PDF to get the updated file
       } catch (error) {
         console.error("Error uploading file:", error.response);
-        // Handle error (e.g., show notification)
+        toast.error("Error uploading file.", { position: "top-right", duration: 4000 });
       }
     } else {
-      console.log("No file selected");
+      toast.error("No file selected.", { position: "top-right", duration: 4000 });
     }
   };
 
@@ -85,33 +88,33 @@ useEffect(() => {
 
   return (
     <div className="relative h-screen flex flex-col bg-gray-100">
+      {/* Tambahkan ToastContainer di luar komponen dinamis */}
+      <ToastContainer />
+
       {/* Responsive PDF iframe container */}
       <div className="flex-grow relative p-4">
-      {pdfUrl ? (
-        <iframe
-          src={`${pdfUrl}`}
-          title="Panduan PKL"
-          className="w-full h-full"
-          style={{ border: 'none', height: '90vh' }}
-          onContextMenu={(e) => e.preventDefault()} // Disable right-click
-        />
-      ) : (
-        <p className="text-center text-gray-500">Loading PDF...</p>
-      )}
-    </div>
-
+        {pdfUrl ? (
+          <iframe
+            src={`${pdfUrl}`}
+            title="Panduan PKL"
+            className="w-full h-full"
+            style={{ border: 'none', height: '90vh' }}
+            onContextMenu={(e) => e.preventDefault()} // Disable right-click
+          />
+        ) : (
+          <p className="text-center text-gray-500">Loading PDF...</p>
+        )}
+      </div>
 
       {/* Floating Upload Button */}
       {hasAnyPermission(["siswa.delete"]) && (
-        
-     
-      <button
-        onClick={toggleFormVisibility}
-        className="fixed bottom-4 right-4 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition duration-300"
-      >
-        Upload File
-      </button>
-       )}
+        <button
+          onClick={toggleFormVisibility}
+          className="fixed bottom-4 right-4 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition duration-300"
+        >
+          Upload File
+        </button>
+      )}
 
       {/* Conditional Upload Form */}
       {isFormVisible && (

@@ -6,13 +6,16 @@ import { openModal } from "../../common/modalSlice";
 import { getLeadsContent } from "../leadSlice";
 import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 import PencilIcon from '@heroicons/react/24/outline/PencilIcon';
+import EyeIcon from '@heroicons/react/24/outline/EyeIcon';
 import LeadDetailsModal from "./DetailModal";
 import Api from "../../../api";
 import Cookies from "js-cookie";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import swal from "sweetalert2";
-import template from "../../../assets/Template import-siswa.xlsx";
+import template from '../../../assets/Template import-siswa.xlsx';
+import hasAnyPermission from "../../../utils/Permissions";
+
 
 function SkeletonRow() {
     return (
@@ -37,6 +40,7 @@ function SkeletonRow() {
 }
 
 const Leads = () => {
+    
     const { leads, loading, error } = useSelector((state) => state.lead);
     const dispatch = useDispatch();
     const [searchTerm, setSearchTerm] = useState("");
@@ -72,7 +76,6 @@ const Leads = () => {
                     Authorization: `Bearer ${token}`,
                 }
             });
-            console.log("API Response Data:", response.data);
 
             setSiswa(response.data.data.data);
 
@@ -99,8 +102,9 @@ const Leads = () => {
     };
 
     const filteredLeads = siswa.filter((lead) =>
-        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.email.toLowerCase().includes(searchTerm.toLowerCase())
+        lead.classes?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.industries?.name.toLowerCase().includes(searchTerm.toLowerCase())||
+        lead.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const deleteCurrentLead = (id) => {
@@ -112,7 +116,7 @@ const Leads = () => {
     };
 
     const getStatusClass = (lead) => {
-        if (lead.industries) return "badge badge-secondary bg-green-500 border-green-500 w-20"; // Status is "Sedang"
+        if (lead.industries) return "badge badge-secondary badge-xs p-2 bg-green-500 border-green-500 w-20"; // Status is "Sedang"
         return "badge badge-secondary bg-red-500 w-20"; // Status is "Belum"
     };
 
@@ -128,20 +132,65 @@ const Leads = () => {
     };
 
     const renderPagination = () => {
-        let pages = [];
-        for (let i = 1; i <= totalPages; i++) {
-            pages.push(
-                <button
-                    key={i}
-                    className={`btn btn-sm ${i === currentPage ? "btn-active" : ""}`}
-                    onClick={() => handleClick(i)}
-                >
-                    {i}
-                </button>
-            );
+        const pages = [];
+        const totalPages = Math.ceil(pagination.total / pagination.perPage);
+        
+        // Always show the first page
+        pages.push(
+          <button
+            key={1}
+            className={`join-item btn mr-1 ${pagination.currentPage === 1 ? "btn-active" : ""}`}
+            onClick={() => handleClick(1)}
+          >
+            1
+          </button>
+        );
+      
+        // Show dots if needed
+        if (pagination.currentPage > 3) {
+          pages.push(
+            <button key="prev-ellipsis" className="join-item btn btn-disabled mr-1">...</button>
+          );
         }
-        return pages;
-    };
+      
+        // Show pages around the current page
+        const startPage = Math.max(2, pagination.currentPage - 1);
+        const endPage = Math.min(totalPages - 1, pagination.currentPage + 1);
+      
+        for (let i = startPage; i <= endPage; i++) {
+          pages.push(
+            <button
+              key={i}
+              className={`join-item btn mr-1 ${pagination.currentPage === i ? "btn-active" : ""}`}
+              onClick={() => handleClick(i)}
+            >
+              {i}
+            </button>
+          );
+        }
+      
+        // Show dots if needed
+        if (pagination.currentPage < totalPages - 2) {
+          pages.push(
+            <button key="next-ellipsis" className="join-item btn btn-disabled">...</button>
+          );
+        }
+      
+        // Always show the last page
+        if (totalPages > 1) {
+          pages.push(
+            <button
+              key={totalPages}
+              className={`join-item btn ${pagination.currentPage === totalPages ? "btn-active" : ""}`}
+              onClick={() => handleClick(totalPages)}
+            >
+              {totalPages}
+            </button>
+          );
+    
+          return <>{pages}</>;
+        }
+      }
 
     const handleDelete = async (leadId) => {
         try {
@@ -195,7 +244,7 @@ const Leads = () => {
         setIsLoading(true); // Start loading
 
         try {
-            const response = await Api.post("/admin/import", formData, {
+            const response = await Api.post("/admin/importStudent", formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
@@ -233,14 +282,13 @@ const Leads = () => {
             });
     
             if (isConfirmed) {
-                const response = await Api.get("/admin/export-users", {
+                const response = await Api.get("/admin/export-users/siswa", {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                     responseType: 'blob' // Important for handling file downloads
                 });
     
-                console.log("API Response Data:", response.data);
     
                 // Create a link element to download the file
                 const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -262,12 +310,21 @@ const Leads = () => {
     
 
     const downloadTemplate = () => {
-        // Update the URL to the location where your template file is hosted
-        const templateUrl = "../../../assets/Template import-siswa.xlsx"; // Adjust this path
+        // Create a link element
+        const link = document.createElement('a');
+        link.href = template;
+        link.setAttribute('download', 'Template import-siswa.xlsx'); // Set the filename for download
     
-        // Open the template URL in a new tab or download it directly
-        window.open(templateUrl, "_blank");
+        // Append the link to the body
+        document.body.appendChild(link);
+    
+        // Trigger the download by simulating a click
+        link.click();
+    
+        // Remove the link element from the document
+        document.body.removeChild(link);
     };
+    
     
 
     if (loading) return <div>Loading...</div>;
@@ -276,7 +333,10 @@ const Leads = () => {
     return (
         <>
             <TitleCard title="Data Siswa" topMargin="mt-2" TopSideButtons={
+               
                 <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-2">
+                    
+                        
                     <input
                         type="text"
                         className="input input-bordered input-sm w-full sm:w-64"
@@ -284,16 +344,21 @@ const Leads = () => {
                         value={searchTerm}
                         onChange={handleSearchChange}
                     />
+                     {hasAnyPermission(["siswa.delete"]) && (
+                        <>
                     <Link to="/app/data/siswa/tambah">
                         <button className="btn btn-sm normal-case btn-primary w-full sm:w-auto">Add New</button>
                     </Link>
-                    <button className="btn btn-sm normal-case btn-primary w-full sm:w-auto" onClick={downloadData}>
+                    <button className="btn btn-sm normal-case btn-warning w-full sm:w-auto" onClick={downloadData}>
                         Download All Data
                     </button>
                     <button className="btn btn-sm normal-case btn-primary w-full sm:w-auto" onClick={() => document.getElementById('my_modal_5').showModal()}>
                         Import Excel
                     </button>
+                    </>
+                     )}
                 </div>
+               
             }>
                 <div className="overflow-x-auto w-full">
                     <table className="table w-full text-center">
@@ -310,23 +375,36 @@ const Leads = () => {
                             {loading ? (
                                 <SkeletonRow />
                             ) : (
-                                siswa.map((lead) => (
+                                filteredLeads.map((lead) => (
                                     <tr key={lead.id}>
                                         <td>{lead.name}</td>
-                                        <td>{lead.class}</td>
+                                        <td>{lead.classes ? lead.classes.name : "-"}</td>
                                         <td>
-                                            <div className={getStatusClass(lead)}>{lead.industries ? "Sedang" : "Belum"}</div>
+                                            <div className={getStatusClass(lead)}> {lead.industries ? "Berlangsung" : "Belum"} </div>
                                         </td>
                                         <td>{lead.industries ? lead.industries.name : "-"}</td>
                                         <td>
+                                            <div className="flex justify-center">   
+                                                
+                                            </div>
                                             <div className="flex items-center justify-center space-x-2">
+                                            {hasAnyPermission(["siswa.delete"]) && (
+                                            <Link to={`/app/data/siswa/edit/${lead.user_id}`}>
+                                                    <button className="btn btn-sm btn-square btn-primary">
+                                                        <PencilIcon className="h-4 w-4" />
+                                                    </button>
+                                                </Link>
+                                                )}
                                                 <button className="btn btn-sm btn-square btn-warning" onClick={() => viewLeadDetails(lead)}>
-                                                    <PencilIcon className="h-4 w-4" />
+                                                <EyeIcon className="h-4 w-4" />
                                                 </button>
-                                                <button className="btn btn-sm btn-square btn-error" onClick={() => handleDelete(lead.id)}>
+                                                {hasAnyPermission(["siswa.delete"]) && (
+                                                <button className="btn btn-sm btn-square btn-error" onClick={() => handleDelete(lead.user_id)}>
                                                     <TrashIcon className="h-4 w-4" />
                                                 </button>
+                                                  )}
                                             </div>
+                                          
                                         </td>
                                     </tr>
                                 ))
@@ -334,19 +412,19 @@ const Leads = () => {
                         </tbody>
                     </table>
                 </div>
-                <div className="flex justify-center mt-4">
-                    {renderPagination()}
-                </div>
+            <div className="flex justify-center mt-4">
+                {renderPagination()}
+            </div>
             </TitleCard>
             <ToastContainer />
-            {isDetailModalOpen && <LeadDetailsModal lead={selectedLead} closeModal={() => setIsDetailModalOpen(false)} />}
+            {isDetailModalOpen && <LeadDetailsModal lead={selectedLead} onClose={() => setIsDetailModalOpen(false)} />}
             <dialog id="my_modal_5" className="modal">
                 <form method="dialog" className="modal-box">
                     <h3 className="font-bold text-lg">Upload Excel Siswa</h3>
                     <p className="py-4">
                         Silahkan upload file Excel siswa pada field di bawah ini.
                     </p>
-                    <button className="btn bg-red-500 text-white w-[150px] text-xs mb-3" type="button" onClick={downloadTemplate}>Download Template</button>
+                    <a className="btn bg-red-500 text-white w-[150px] text-xs mb-3" href="https://drive.google.com/drive/folders/1heRByiuCHQ7YAxJE8Azr9NMajwF0MKzT?usp=sharing"  target="_blank" >Download Template</a>
                     <input
                         type="file"
                         className="file-input file-input-bordered w-full"

@@ -8,20 +8,17 @@ const token = Cookies.get('token');
 
 const EditStudentPage = () => {
     const navigate = useNavigate();
-    const { id } = useParams(); // Extract the student ID from URL params
+    const { id } = useParams();
 
     const [guru, setGuru] = useState([]);
     const [kelas, setKelas] = useState([]);
     const [jurusan, setJurusan] = useState([]);
     const [orangtua, setOrangTua] = useState([]);
-    const [industries, setIndustries] = useState([]); // Initialize as an empty array
-    const [pagination, setPagination] = useState({
-        currentPage: 1,
-        perPage: 10,
-        total: 0
-    });
+    const [industries, setIndustries] = useState([]);
+
     const [formData, setFormData] = useState({
         user_id: "",
+        username: "",
         name: "",
         nis: "",
         placeOfBirth: "",
@@ -36,18 +33,18 @@ const EditStudentPage = () => {
         parents_id: "",
         teacher_id: "",
     });
-
+    
     const fetchStudentData = async () => {
         try {
-            const response = await Api.get(`admin/student/${id}`, {
+            const response = await Api.get(`admin/users/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            const student = response.data.data;
-            console.log(student);
+            const student = response.data.data.student;
             setFormData({
                 user_id: student.user_id || "",
+                username: response.data.data.name|| "",
                 name: student.name || "",
                 nis: student.nis || "",
                 placeOfBirth: student.placeOfBirth || "",
@@ -61,6 +58,7 @@ const EditStudentPage = () => {
                 departemen_id: student.departemen_id || "",
                 parents_id: student.parents_id || "",
                 teacher_id: student.teacher_id || "",
+                roles : "siswa",
             });
         } catch (error) {
             console.error("Error fetching student data:", error);
@@ -70,7 +68,7 @@ const EditStudentPage = () => {
             });
         }
     };
-
+    
     const handleChange = (e) => {
         const { name, value, type, files } = e.target;
         setFormData((prevData) => ({
@@ -78,11 +76,11 @@ const EditStudentPage = () => {
             [name]: type === 'file' ? files[0] : value
         }));
     };
-
+    
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await Api.put(`admin/student/${id}`, formData, {
+            await Api.patch(`admin/users/${id}`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -95,7 +93,7 @@ const EditStudentPage = () => {
         } catch (error) {
             if (error.response) {
                 console.error("Error response data:", error.response.data);
-
+    
                 const errorMessages = error.response.data.errors;
                 if (errorMessages) {
                     for (const [field, messages] of Object.entries(errorMessages)) {
@@ -120,78 +118,123 @@ const EditStudentPage = () => {
             }
         }
     };
+    
+
+    const fetchIndustries = async () => {
+        let allIndustries = [];
+        let currentPage = 1;
+        let totalPages = 1;
+
+        try {
+            while (currentPage <= totalPages) {
+                const response = await Api.get(`admin/industri?page=${currentPage}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const data = response.data.data.data || [];
+                allIndustries = [...allIndustries, ...data];
+                totalPages = response.data.data.last_page;
+                currentPage++;
+            }
+            setIndustries(allIndustries);
+        } catch (error) {
+            setIndustries([]);
+        }
+    };
+
+    const fetchOrangTua = async () => {
+        let allParents = [];
+        let currentPage = 1;
+        let totalPages = 1;
+
+        try {
+            while (currentPage <= totalPages) {
+                const response = await Api.get(`admin/parent?page=${currentPage}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const data = response.data.data.data || [];
+                allParents = [...allParents, ...data];
+                totalPages = response.data.data.last_page;
+                currentPage++;
+            }
+            setOrangTua(allParents);
+        } catch (error) {
+            setOrangTua([]);
+        }
+    };
+
+    const fetchGuru = async () => {
+        let allTeachers = [];
+        let currentPage = 1;
+        let totalPages = 1;
+
+        try {
+            while (currentPage <= totalPages) {
+                const response = await Api.get(`admin/teacher?page=${currentPage}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const data = response.data.data.data || [];
+                allTeachers = [...allTeachers, ...data];
+                totalPages = response.data.data.last_page;
+                currentPage++;
+            }
+            setGuru(allTeachers);
+        } catch (error) {
+            setGuru([]);
+        }
+    };
+
+    const fetchKelas = async () => {
+        let allClasses = [];
+        let currentPage = 1;
+        let totalPages = 1;
+
+        try {
+            while (currentPage <= totalPages) {
+                const response = await Api.get(`admin/classes?page=${currentPage}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const data = response.data.data.data || [];
+                allClasses = [...allClasses, ...data];
+                totalPages = response.data.data.last_page;
+                currentPage++;
+            }
+            setKelas(allClasses);
+        } catch (error) {
+            setKelas([]);
+        }
+    };
+
+    const fetchJurusan = async () => {
+        let allDepartments = [];
+        let currentPage = 1;
+        let totalPages = 1;
+
+        try {
+            while (currentPage <= totalPages) {
+                const response = await Api.get(`admin/departemen?page=${currentPage}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const data = response.data.data.data || [];
+                allDepartments = [...allDepartments, ...data];
+                totalPages = response.data.data.last_page;
+                currentPage++;
+            }
+            setJurusan(allDepartments);
+        } catch (error) {
+            setJurusan([]);
+        }
+    };
 
     useEffect(() => {
         fetchStudentData();
+        fetchIndustries();
+        fetchGuru();
+        fetchOrangTua();
+        fetchKelas();
+        fetchJurusan();
     }, [id]);
 
-    useEffect(() => {
-        Api.get("admin/teacher", {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then(response => {
-                const data = response.data.data.data || []; // Ensure the data is an array
-                setGuru(Array.isArray(data) ? data : []);
-                console.log("Fetched teacher data:", response.data.data); // Check the structure of fetched data
-            })
-            .catch(error => console.error("Error fetching teacher data:", error));
-    }, [token]);
 
-    useEffect(() => {
-        Api.get("admin/classes", {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then(response => {
-                const data = response.data.data.data || []; // Ensure the data is an array
-                setKelas(Array.isArray(data) ? data : []);
-                console.log("Fetched Classes data:", response.data.data); // Check the structure of fetched data
-            })
-            .catch(error => console.error("Error fetching Classes data:", error));
-    }, [token]);
-
-    useEffect(() => {
-        Api.get("admin/departemen", {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then(response => {
-                const data = response.data.data.data || []; // Ensure the data is an array
-                setJurusan(Array.isArray(data) ? data : []);
-                console.log("Fetched departemen data:", response.data.data); // Check the structure of fetched data
-            })
-            .catch(error => console.error("Error fetching departemen data:", error));
-    }, [token]);
-
-    useEffect(() => {
-        Api.get("admin/parent", {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then(response => {
-                const data = response.data.data.data || []; // Ensure the data is an array
-                setOrangTua(Array.isArray(data) ? data : []);
-                console.log("Fetched parent data:", response.data.data); // Check the structure of fetched data
-            })
-            .catch(error => console.error("Error fetching parent data:", error));
-    }, [token]);
-
-    const fetchIndustries = async () => {
-        try {
-            const response = await Api.get(`admin/industri`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            });
-            const data = response.data.data.data || []; // Ensure data is an array
-            setIndustries(Array.isArray(data) ? data : []);
-        } catch (error) {
-            console.error("Error fetching industry data:", error);
-            setIndustries([]); // Set to an empty array on error
-        }
-    };
-    
-
-    useEffect(() => {
-        fetchIndustries();
-    }, []);
 
     return (
         <div className="container mx-auto my-10 px-4 dark:bg-gray-800">
@@ -200,17 +243,20 @@ const EditStudentPage = () => {
                 <p className="text-center border-b pb-4 mb-4 dark:text-white">Silakan update form di bawah!</p>
 
                 <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">User ID</label>
+
+
+                <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Username</label>
                         <input
                             type="text"
-                            name="user_id"
-                            value={formData.user_id}
+                            name="username"
+                            value={formData.username}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                             required
                         />
                     </div>
+
 
                     <div className="mb-4">
                         <label className="block text-gray-700 font-bold mb-2">Nama Siswa</label>
@@ -270,8 +316,8 @@ const EditStudentPage = () => {
                             required
                         >
                             <option value="">Pilih Jenis Kelamin</option>
-                            <option value="male">Laki-Laki</option>
-                            <option value="female">Perempuan</option>
+                            <option value="Laki-Laki">Laki-Laki</option>
+                            <option value="Perempuan">Perempuan</option>
                         </select>
                     </div>
 
@@ -346,7 +392,7 @@ const EditStudentPage = () => {
                             value={formData.industri_id}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                            required
+                           
                         >
                             <option value="">Pilih Industri</option>
                             {industries.map((industriItem) => (
@@ -361,7 +407,7 @@ const EditStudentPage = () => {
                         <label className="block text-gray-700 font-bold mb-2">Pilih Orang Tua</label>
                         <select
                             name="parent_id"
-                            value={formData.parent_id}
+                            value={formData.parents_id}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                             required

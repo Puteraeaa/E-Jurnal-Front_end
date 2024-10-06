@@ -12,45 +12,30 @@ const EditStudentPage = () => {
 
   const [jurusan, setJurusan] = useState([]);
   const [formData, setFormData] = useState({
+    username: "",
     name: "",
     user_id: "",
     no_hp: "",
-    departemen_id: ""
+    departemen_id: "",
+    roles: "guru",
   });
 
   const fetchTeacherData = async () => {
     try {
-      const response = await Api.get(`admin/teacher/${id}`, {
+      const response = await Api.get(`admin/users/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-      const teacher = response.data.data;
+      const teacher = response.data.data.teacher;
+      const username = response.data.data.name;
       setFormData({
+        username: username || "",
         name: teacher.name || "",
         user_id: teacher.user_id || "",
         no_hp: teacher.no_hp || "",
-        departemen_id: teacher.departemen_id || ""
-      });
-    } catch (error) {
-      toast.error("Failed to load student data.", {
-        position: "top-right",
-        duration: 4000
-      });
-    }
-    try {
-      const response = await Api.get(`admin/teacher/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      const teacher = response.data.data;
-      setFormData({
-        name: teacher.name || "",
-        password: teacher.password || "",
-        password_confirmation: teacher.password_confirmation || "",
-        no_hp: teacher.no_hp || "",
-        departemen_id: teacher.departemen_id || ""
+        departemen_id: teacher.departemen_id || "",
+        roles: "guru"
       });
     } catch (error) {
       toast.error("Failed to load student data.", {
@@ -71,7 +56,7 @@ const EditStudentPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await Api.put(`admin/student/${id}`, formData, {
+      await Api.put(`admin/users/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -80,10 +65,11 @@ const EditStudentPage = () => {
         position: "top-right",
         duration: 4000
       });
-      navigate("/app/data/siswa");
+      navigate("/app/data/guru");
     } catch (error) {
       if (error.response) {
         const errorMessages = error.response.data.errors;
+        console.error("Error response data:", error.response.data);
         if (errorMessages) {
           for (const [field, messages] of Object.entries(errorMessages)) {
           }
@@ -138,6 +124,17 @@ const EditStudentPage = () => {
         </p>
 
         <form onSubmit={handleSubmit}>
+        <div className="mb-4" >
+            <label className="block text-gray-700 font-bold mb-2">Username</label>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+              required
+            />
+          </div>
           <div className="mb-4">
             <label className="block text-gray-700 font-bold mb-2">Nama</label>
             <input
@@ -149,17 +146,7 @@ const EditStudentPage = () => {
               required
             />
           </div>
-          <div className="mb-4" hidden>
-            <label className="block text-gray-700 font-bold mb-2">Nama</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.user}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-              required
-            />
-          </div>
+         
 
           <div className="mb-4">
             <label className="block text-gray-700 font-bold mb-2">

@@ -25,7 +25,7 @@ function PageContent(){
     return(
         <div className="drawer-content flex flex-col ">
             <Header/>
-            <main className="flex-1 overflow-y-auto md:pt-4 pt-4 px-6  bg-base-200" ref={mainContentRef}>
+            <main className="flex-1 overflow-y-auto md:pt-4 pt-4 px-6  bg-base-200 " ref={mainContentRef}>
                 <Suspense fallback={<SuspenseContent />}>
                         <Routes>
                             {
@@ -45,7 +45,7 @@ function PageContent(){
                             <Route path="*" element={<Page404 />} />
                         </Routes>
                 </Suspense>
-                <div className="h-16"></div>
+                <div className="h-16 md:-[100px] "></div>
             </main>
         </div> 
     )

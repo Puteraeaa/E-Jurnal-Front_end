@@ -10,35 +10,33 @@ const EditParentPage = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const [formData, setFormData] = useState({
-        user_id: "",
+        username: "",
+        name: "",
         nama: "",
-        placeOfBirth: "",
-        dateOfBirth: "",
+        roles: "",
         gender: "",
         alamat: "",
-        occupation:"",
-        phoneNumber:"",
-
+        occupation: "",
+        phoneNumber: "",
     });
 
     const fetchParentData = async () => {
         try {
-            const response = await Api.get(`admin/parent/${id}`, {
+            const response = await Api.get(`admin/users/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            const parent = response.data.data;
-            console.log(parent);
+            const user = response.data.data;
             setFormData({
-                user_id: parent.user_id || "",
-                nama: parent.users ? parent.users.name : "",
-                placeOfBirth: parent.placeOfBirth || "",
-                dateOfBirth: parent.dateOfBirth || "",
-                gender: parent.gender || "",
-                alamat: parent.alamat || "",
-                occupation: parent.occupation || "",
-                phoneNumber: parent.phoneNumber || "",
+                username: user.name || "",
+                name: user.parent ? user.parent.nama : "",
+                nama: user.parent ? user.parent.nama : "",
+                roles: user.roles ? user.roles.join(", ") : "",
+                gender: user.parent ? user.parent.gender : "",
+                alamat: user.parent ? user.parent.alamat : "",
+                occupation: user.parent ? user.parent.occupation : "",
+                phoneNumber: user.parent ? user.parent.phoneNumber : "",
             });
         } catch (error) {
             console.error("Error fetching parent data:", error);
@@ -50,22 +48,22 @@ const EditParentPage = () => {
     };
 
     const handleChange = (e) => {
-        const { name, value, type, files } = e.target;
+        const { name, value } = e.target;
         setFormData((prevData) => ({
             ...prevData,
-            [name]: type === 'file' ? files[0] : value
+            [name]: value
         }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await Api.put(`admin/parent/62`, formData, {
+            await Api.put(`admin/users/${id}`, formData, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${token},`
                 },
             });
-            toast.success("Parent data updated successfully!", {
+            toast.success("User data updated successfully!", {
                 position: "top-right",
                 duration: 4000,
             });
@@ -79,19 +77,19 @@ const EditParentPage = () => {
                     for (const [field, messages] of Object.entries(errorMessages)) {
                         console.error(`Field: ${field}, Errors: ${messages.join(', ')}`);
                     }
-                    toast.error(`Failed to update parent data: ${Object.values(errorMessages)[0][0]}`, {
+                    toast.error(`Failed to update user data: ${Object.values(errorMessages)[0][0]}`, {
                         position: "top-right",
                         duration: 4000,
                     });
                 } else {
-                    toast.error(`Failed to update parent data: ${error.response.data.message || 'Please check the form fields.'}`, {
+                    toast.error(`Failed to update user data: ${error.response.data.message || 'Please check the form fields.'}`, {
                         position: "top-right",
                         duration: 4000,
                     });
                 }
             } else {
-                console.error("Error updating parent data:", error);
-                toast.error("Failed to update parent data.", {
+                console.error("Error updating user data:", error);
+                toast.error("Failed to update user data.", {
                     position: "top-right",
                     duration: 4000,
                 });
@@ -106,18 +104,39 @@ const EditParentPage = () => {
     return (
         <div className="container mx-auto my-10 px-4">
             <div className="bg-white shadow-lg rounded-lg p-6 border-t-4 border-blue-500">
-                <h1 className="text-3xl font-bold text-center mb-4">Edit Data Orang Tua</h1>
-                <p className="text-center border-b pb-4 mb-4">Silakan update form di bawah!</p>
+                <h1 className="text-3xl font-bold text-center mb-4">Edit User Data</h1>
+                <p className="text-center border-b pb-4 mb-4">Please update the form below!</p>
 
                 <form onSubmit={handleSubmit}>
-                   
-
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Nama Orang Tua</label>
+                        <label className="block text-gray-700 font-bold mb-2">Username</label>
                         <input
                             type="text"
-                            name="name"
+                            name="username"
+                            value={formData.username}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-4" hidden>
+                        <label className="block text-gray-700 font-bold mb-2">Name</label>
+                        <input
+                            type="text"
+                            name="nama"
                             value={formData.name}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            required
+                        />
+                    </div>
+                    <div className="mb-4" hid>
+                        <label className="block text-gray-700 font-bold mb-2">Name</label>
+                        <input
+                            type="text"
+                            name="nama"
+                            value={formData.nama}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                             required
@@ -125,45 +144,32 @@ const EditParentPage = () => {
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Jenis Kelamin</label>
+                        <label className="block text-gray-700 font-bold mb-2">Roles</label>
+                        <input
+                            type="text"
+                            name="roles"
+                            value={formData.roles}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Gender</label>
                         <select
                             name="gender"
                             value={formData.gender}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                         >
-                            <option value="">Pilih Jenis Kelamin</option>
-                            <option value="Laki-laki">Laki-laki</option>
-                            <option value="Perempuan">Perempuan</option>
+                            <option value="">Select Gender</option>
+                            <option value="laki">Laki-laki</option>
+                            <option value="perempuan">Perempuan</option>
                         </select>
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Tempat Lahir</label>
-                        <input
-                            type="text"
-                            name="placeOfBirth"
-                            value={formData.placeOfBirth}
-                            onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                        />
-                    </div>
-
-                    <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Tanggal Lahir</label>
-                        <input
-                            type="date"
-                            name="dateOfBirth"
-                            value={formData.dateOfBirth}
-                            onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                        />
-                    </div>
-
-                   
-
-                    <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Alamat</label>
+                        <label className="block text-gray-700 font-bold mb-2">Address</label>
                         <textarea
                             name="alamat"
                             value={formData.alamat}
@@ -172,8 +178,9 @@ const EditParentPage = () => {
                             rows="4"
                         />
                     </div>
+
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Pekerjaan</label>
+                        <label className="block text-gray-700 font-bold mb-2">Occupation</label>
                         <input
                             type="text"
                             name="occupation"
@@ -182,8 +189,9 @@ const EditParentPage = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                         />
                     </div>
+
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Nomer Telepon</label>
+                        <label className="block text-gray-700 font-bold mb-2">Phone Number</label>
                         <input
                             type="text"
                             name="phoneNumber"
@@ -203,7 +211,7 @@ const EditParentPage = () => {
                         <button
                             type="button"
                             className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg"
-                            onClick={() => navigate('/app/data/orangtua')}
+                            onClick={() => navigate('/app/data/oarngtua')}
                         >
                             Cancel
                         </button>

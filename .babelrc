@@ -1,8 +1,11 @@
 {
-    "env": {
-      "production": {
-        "plugins": ["transform-remove-console"]
-      }
+  "presets": [
+    "@babel/preset-env",
+    "@babel/preset-react"
+  ],
+  "env": {
+    "production": {
+      "plugins": ["transform-remove-console"]
     }
   }
-  
+}

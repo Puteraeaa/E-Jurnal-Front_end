@@ -22,6 +22,9 @@ function SkeletonRow() {
       <td className="p-4">
         <div className="bg-gray-400 h-4 w-32 rounded"></div>
       </td>
+      <td className="p-4">
+        <div className="bg-gray-400 h-4 w-32 rounded"></div>
+      </td>
     </tr>
   );
 }
@@ -34,6 +37,13 @@ function Index() {
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [classes, setClasses] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+      currentPage: 1,
+      perPage: 5, // Ensure itemsPerPage is consistent
+      total: 0
+  });
   const [isModalOpen, setIsModalOpen] = useState(false); // Manage modal state
 
   const token = Cookies.get("token");
@@ -73,13 +83,15 @@ function Index() {
 
   const fetchData = async () => {
     const role = user.roles;
+    
 
     try {
       let response;
       const params = new URLSearchParams({
         search: searchQuery,
         departemen_id: selectedDepartment,
-        classes_id: selectedClass
+        classes_id: selectedClass,
+        page: currentPage
       }).toString();
 
       // Debugging log
@@ -91,30 +103,37 @@ function Index() {
           }
         });
       } else if (role === "guru") {
-        response = await Api.get(`admin/indexRole-jurnal`, {
+        response = await Api.get(`admin/indexRole-jurnal?${params}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
       } else if (role === "orang tua") {
-        response = await Api.get(`admin/indexRole-jurnal`, {
+        response = await Api.get(`admin/indexRole-jurnal?${params}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
       } else {
-        response = await Api.get(`admin/jurnal?${params}`, {
+        response = await Api.get(`admin/indexRole-jurnal?${params}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
       }
 
-      // Debugging log
-      setAttendanceRecords(response.data.data.data || []);
+      const sortedData = (response.data.data.data || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setAttendanceRecords(sortedData);  
+      setPagination({
+        currentPage: response.data.data.current_page,
+        perPage: response.data.data.per_page,
+        total: response.data.data.total
+    });
+    console.log(response.data.data);
       setLoading(false);
     } catch (error) {
       setLoading(false);
+
     }
   };
 
@@ -124,14 +143,90 @@ function Index() {
   }, []);
 
   useEffect(() => {
-    fetchData();
-  }, [searchQuery, selectedClass, selectedDepartment]);
+    fetchData(currentPage);
+  }, [searchQuery, selectedClass, selectedDepartment, currentPage]);
 
   const handleRowClick = (id) => {
     navigate(`/app/detail-laporan/${id}`);
   };
 
+  const totalPages = Math.ceil(pagination.total / pagination.perPage);
+
+  const handleClick = (pageNumber) => {
+      setCurrentPage(pageNumber);
+  };
+
+ 
+
+  const filteredLeads = attendanceRecords.filter(lead =>
+      lead.users.students?.name.toLowerCase().includes(searchTerm.toLowerCase()) 
+  );
+  
+
+  const renderPagination = () => {
+    const pages = [];
+    const totalPages = Math.ceil(pagination.total / pagination.perPage);
+    
+    // Always show the first page
+    pages.push(
+      <button
+        key={1}
+        className={`join-item btn ${pagination.currentPage === 1 ? "btn-active" : ""}`}
+        onClick={() => handleClick(1)}
+      >
+        1
+      </button>
+    );
+  
+    // Show dots if needed
+    if (pagination.currentPage > 3) {
+      pages.push(
+        <button key="prev-ellipsis" className="join-item btn btn-disabled">...</button>
+      );
+    }
+  
+    // Show pages around the current page
+    const startPage = Math.max(2, pagination.currentPage - 1);
+    const endPage = Math.min(totalPages - 1, pagination.currentPage + 1);
+  
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(
+        <button
+          key={i}
+          className={`join-item btn ${pagination.currentPage === i ? "btn-active" : ""}`}
+          onClick={() => handleClick(i)}
+        >
+          {i}
+        </button>
+      );
+    }
+  
+    // Show dots if needed
+    if (pagination.currentPage < totalPages - 2) {
+      pages.push(
+        <button key="next-ellipsis" className="join-item btn btn-disabled">...</button>
+      );
+    }
+  
+    // Always show the last page
+    if (totalPages > 1) {
+      pages.push(
+        <button
+          key={totalPages}
+          className={`join-item btn ${pagination.currentPage === totalPages ? "btn-active" : ""}`}
+          onClick={() => handleClick(totalPages)}
+        >
+          {totalPages}
+        </button>
+      );
+
+      return <>{pages}</>;
+    }
+  }
+
+
   return (
+    <>
     <div className="container mx-auto p-6">
       <div className="bg-white dark:bg-[#1c2229] shadow-md rounded-lg p-6 mb-6">
         <p className="border-b pb-2 font-bold text-xl md:text-4xl text-center">
@@ -148,8 +243,8 @@ function Index() {
         <input
           type="text"
           placeholder="Search"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
           className="input w-full max-w-xs input-bordered h-9"
         />
         {hasAnyPermission(["siswa.delete", "penilaian.create"]) && (
@@ -160,13 +255,14 @@ function Index() {
             <i className="fa-solid fa-filter"></i> Filter
           </button>
         )}
-
+               {hasAnyPermission(["murid.index"]) && (
         <Link
           to="/app/laporan-pkl/tambah"
           className="inline-block bg-blue-500 text-white text-sm font-semibold md:py-1 md:px-2 md:text-base py-1 px-2 rounded hover:bg-blue-600 transition-colors duration-300"
         >
           <i className="fa-solid fa-plus"></i> Tambah Laporan
         </Link>
+      )}
       </div>
 
       <dialog id="my_modal_3" className="modal">
@@ -216,17 +312,20 @@ function Index() {
       </dialog>
 
       <div className="overflow-x-auto mt-6">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-100 dark:bg-gray-800">
+        <table className="md:w-[100%] w-[400%]  divide-y divide-gray-200 ">
+          <thead className="bg-gray-100 dark:bg-gray-900 dark:text-white">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+            <th className="px-6 py-3 text-left  text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider=">
+                No
+              </th>
+              <th className="px-6 py-3 text-left  text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider=">
                 Nama
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
                 Tempat PKL
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
-                Jurusan
+              <th className="px-6 py-3 text-left  text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
+                Jurusan 
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-white uppercase tracking-wider">
                 Tanggal
@@ -241,26 +340,30 @@ function Index() {
               Array(6)
                 .fill(0)
                 .map((_, index) => <SkeletonRow key={index} />)
-            ) : attendanceRecords.length > 0 ? (
-              attendanceRecords.map((record) => (
+            ) : filteredLeads.length > 0 ? (
+              filteredLeads.map((record) => (
                 <tr
                   key={record.id}
-                  className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800"
                   onClick={() => handleRowClick(record.id)}
                 >
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    {record.id}
+                  </td>
                   <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 w-[200px]">
                     <div className="flex items-center">
                       <img
-                        src={
-                          record.users?.students?.image ??
-                          "https://picsum.photos/200/300"
+                         src={
+                          record.users?.students?.image && record.users.students?.image !== "https://api.jurnal.pplgsmkn1ciomas.my.id/storage"
+                            ? record.users.students.image
+                            : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
                         }
                         alt="Profile Mentor"
                         className="w-10 h-10 rounded-full border object-cover mr-3"
                       />
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-white">
-                          {record.users?.name ?? "-"}
+                        <div className="font-medium text-gray-900 dark:text-white w-[200px]">
+                          {record.users.students?.name ?? "-"}
                         </div>
                         <div className="text-gray-500 dark:text-gray-400 text-xs">
                           {record.users?.students?.classes?.name ?? "-"}
@@ -295,7 +398,12 @@ function Index() {
           </tbody>
         </table>
       </div>
+     
     </div>
+    <div className="flex justify-center mt-4 gap-2">
+                    {renderPagination()}
+                </div>
+     </>
   );
 }
 

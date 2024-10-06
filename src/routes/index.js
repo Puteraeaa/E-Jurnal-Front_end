@@ -1,6 +1,7 @@
 // All components mapping with path for internal routes
 
 import { lazy } from 'react'
+import privateRoutes from './PrivateRoutes'
 
 const Dashboard = lazy(() => import('../pages/protected/Dashboard'))
 const Page404 = lazy(() => import('../pages/protected/404'))
@@ -34,6 +35,9 @@ const Transactions = lazy(() => import('../pages/protected/Transactions'))
 const Bills = lazy(() => import('../pages/protected/Bills'))
 const ProfileSettings = lazy(() => import('../pages/protected/ProfileSettings'))
 const editProfile = lazy(() => import('../pages/protected/EditProfile'))
+const editProfileIndustri = lazy(() => import('../pages/protected/EditProfileIndustri'))
+
+
 const Absen = lazy(() => import('../pages/protected/Absen'))
 const Rekap = lazy(() => import('../pages/protected/Rekap'))
 
@@ -46,6 +50,8 @@ const Editlaporan = lazy(() => import('../features/Laporan/Edit-Laporan'))
 const Jurusan = lazy(() => import('../pages/protected/Jurusan-Kelas/Index'))
 const Kelas = lazy(() => import('../pages/protected/Jurusan-Kelas/Kelas'))
 
+const Forbidden = lazy(() => import('../pages/protected/Forbidden'))
+
 
 // nilai
 
@@ -55,6 +61,11 @@ const EditNilai = lazy(() => import('../features/rekapnilai/EditNilai'))
 
 
 const routes = [
+  {
+    path: '/not-authorized',
+    component: Forbidden,
+  },
+
   {
     path: '/dashboard', // the url
     component: Dashboard, // view rendered
@@ -130,6 +141,10 @@ const routes = [
   {
     path: '/edit-profile/',
     component: editProfile,
+  },
+  {
+    path: '/edit-profileindustri/',
+    component: editProfileIndustri,
   },
   {
     path: '/settings-billing',

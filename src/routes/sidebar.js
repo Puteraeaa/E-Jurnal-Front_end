@@ -47,7 +47,7 @@ const routes = [
         icon: <UserIcon className={submenuIconClasses} />,
         name: 'Data Guru',
       },
-      ] : []),
+      
       {
         path: 'data/industri',
         icon: <UserIcon className={submenuIconClasses} />,
@@ -58,6 +58,7 @@ const routes = [
         icon: <UserIcon className={submenuIconClasses} />,
         name: 'Data Orang Tua',
       },
+    ] : []),
     ],
   },
   ] : []),
@@ -78,20 +79,37 @@ const routes = [
     icon: <i className="fa-solid fa-circle-info text-gray-500 text-xl"></i>, // icon component
     name: 'Panduan PKL', // name that appear in Sidebar
   },
-  {
-    path: '/app/calendar', // url
-    icon: <CalendarDaysIcon className={iconClasses} />, // icon component
-    name: 'Calendar', // name that appear in Sidebar
-  },
+ 
+  ...(hasAnyPermission(['murid.index']) ? [
   {
     path: '/app/absensi', // url
     icon: <UserIcon className={iconClasses} />, // icon component
     name: 'Absen', // name that appear in Sidebar
   },
+  
+] : []),
+
+...(hasAnyPermission(['guru.index', 'orang-tua.index', 'tempat.index', 'users.create']) ? [
+  {
+    path: '/app/rekap-absensi',
+    icon: <UserIcon className={iconClasses} />,
+    name: 'Data absen',
+  },
+  ...(hasAnyPermission([ 'users.create']) ? [
+  {
+    path: '/app/calendar', // url
+    icon: <CalendarDaysIcon className={iconClasses} />, // icon component
+    name: 'Calendar', // name that appear in Sidebar
+  },
+
+  ] : []),
+] : []),
+
+
   {
     path: '/app/laporan-pkl', // url
     icon: <InboxArrowDownIcon className={iconClasses} />, // icon component
-    name: 'Laporan PKL', // name that appear in Sidebar 
+    name: 'Jurnal Laporan Harian', // name that appear in Sidebar 
   },
   {
     path: '/app/rekapnilai', // url

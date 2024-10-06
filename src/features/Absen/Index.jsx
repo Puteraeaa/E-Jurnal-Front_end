@@ -17,10 +17,45 @@ const AbsenceForm = () => {
     seconds: 0
   });
   const [devices, setDevices] = useState([]);
-  const [selectedDeviceId, setSelectedDeviceId] = useState("");
+  const [selectedDeviceId, setSelectedDeviceId] = useState("");  
+  const [absenceType, setAbsenceType] = useState("masuk"); // State untuk tipe absen
+  const [isAlreadyAbsent, setIsAlreadyAbsent] = useState(false); 
+
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const token = Cookies.get("token");
+  
+
+  useEffect(() => {
+    const checkAbsen = async () => {
+      try {
+        const response = await Api.get("admin/absen-cek", {
+          headers: { Authorization: `Bearer ${Cookies.get("token")}` },
+        });
+
+        const data = response.data.message;
+
+        // Menentukan apakah absen masuk, pulang, atau sudah absen penuh
+        if (data === "Masuk") {
+          setAbsenceType("Masuk");
+        } else if (data === "Pulang") {
+          setAbsenceType("Pulang");
+        } else if (data === "Anda sudah absen pulang hari ini, tidak bisa absen lagi.") {
+          setIsAlreadyAbsent(true);
+          swal.fire({
+            title: "Sudah Absen",
+            text: "Anda sudah absen masuk dan pulang hari ini.",
+            icon: "info",
+            confirmButtonText: "OK",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching absen status:", error);
+      }
+    };
+
+    checkAbsen();
+  }, []);
 
   // Update current time every second
   useEffect(() => {
@@ -73,7 +108,15 @@ const AbsenceForm = () => {
 
   // Handle getting the user's location
   const handleGetLocation = async () => {
-    // Log state before change
+    if (isAlreadyAbsent) {
+      swal.fire({
+        title: "Sudah Absen",
+        text: "Anda sudah absen masuk dan pulang hari ini.",
+        icon: "info",
+        confirmButtonText: "OK",
+      });
+      return; // Stop further execution if already absent
+    }
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -100,32 +143,41 @@ const AbsenceForm = () => {
   };
 
   // Start the camera for capturing photo
-  const startCamera = () => {
-    navigator.mediaDevices
-      .getUserMedia({ video: { deviceId: selectedDeviceId } })
-      .then((stream) => {
-        videoRef.current.srcObject = stream;
-      })
-      .catch((err) => {
-        toast.error(
-          "Tidak dapat mengakses kamera. Pastikan Anda memberi izin."
-        );
-      });
-  };
+// Start the camera for capturing photo
+const startCamera = () => {
+  navigator.mediaDevices
+    .getUserMedia({ video: { deviceId: selectedDeviceId } })
+    .then((stream) => {
+      const video = videoRef.current;
+      video.srcObject = stream;
+      video.onloadedmetadata = () => {
+        video.play();
 
-  // Capture the photo from the video stream
-  const handleCapturePhoto = () => {
-    const context = canvasRef.current.getContext("2d");
-    context.drawImage(
-      videoRef.current,
-      0,
-      0,
-      canvasRef.current.width,
-      canvasRef.current.height
-    );
-    const dataUrl = canvasRef.current.toDataURL("image/jpeg");
-    setPhoto(dataUrl);
-  };
+        // Set canvas size to match the video stream's actual dimensions
+        canvasRef.current.width = video.videoWidth;
+        canvasRef.current.height = video.videoHeight;
+      };
+    })
+    .catch((err) => {
+      toast.error(
+        "Tidak dapat mengakses kamera. Pastikan Anda memberi izin."
+      );
+    });
+};
+
+// Capture the photo from the video stream
+const handleCapturePhoto = () => {
+  const video = videoRef.current;
+  const context = canvasRef.current.getContext("2d");
+
+  // Draw the video stream into the canvas using its natural dimensions
+  context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+  
+  // Convert the canvas content to a data URL
+  const dataUrl = canvasRef.current.toDataURL("image/jpeg");
+  setPhoto(dataUrl);
+};
+
 
   // Format date to YYYY-MM-DD
   const formatDate = (date) => {
@@ -137,6 +189,8 @@ const AbsenceForm = () => {
 
   // Handle submission of the attendance form
   const handleSubmit = async () => {
+    
+
     const result = await swal.fire({
       title: "Absen",
       text: "Apakah Anda yakin ingin absen?",
@@ -213,6 +267,10 @@ const AbsenceForm = () => {
     startCamera();
   };
 
+  useEffect(() => {
+  }, [isAlreadyAbsent]);
+  
+
   // Clear the form after submission
   const clearForm = () => {
     setLocation(null);
@@ -220,37 +278,54 @@ const AbsenceForm = () => {
   };
 
   return (
-    <div className="card-body mx-auto bg-base-100 h-90 rounded-xl text-center mt-[90px] mb-[80px] md:mt-[100px] md:h-[500px] md:w-1/3">
-      <h1 className="text-2xl font-bold mb-4 md:text-3xl md:mt-5">
+    <div className="card-body mx-auto bg-base-100 h-100 rounded-xl text-center mt-[90px] mb-[80px] md:mt-[100px] md:h-[500px] md:w-1/3">
+      <h1 className="text-2xl font-bold  md:text-3xl   md:mt-5 text-black font-poppins dark:text-white">
         Absensi Siswa PKL
       </h1>
+      <p className="text-sm md:text-xl font-semibold md:mt-[-10px] mt-0 mb-3">
+  {isAlreadyAbsent
+    ? "Anda sudah absen masuk dan pulang"
+    : absenceType === "Masuk"
+    ? "Silahkan Absen Masuk"
+    : "Silahkan Absen Pulang"}
+</p>
+
+
+      {/* Tombol akan dinonaktifkan jika sudah absen */}
       <button
         onClick={handleGetLocation}
-        className="p-2 bg-green-500 text-white hover:bg-green-700 h-[150px] w-[150px] mx-auto rounded-full md:mt-5 md:h-[200px] md:w-[180px]"
+        // Nonaktifkan tombol jika sudah absen penuh
+        className={`p-2 ${isAlreadyAbsent ? 'bg-gray-500 hover:bg-gray-700' : 'bg-green-500 hover:bg-green-700'} ${absenceType === 'Pulang' ? 'bg-yellow-500 hover:bg-yellow-700' : 'bg-green-500 hover:bg-green-700'} text-white h-[150px] w-[150px] mx-auto rounded-full md:mt-5 md:h-[200px] md:w-[180px]`}
       >
         <i className="fa-solid fa-bell text-5xl md:text-7xl text-center"></i>
       </button>
 
-      <div className="flex gap-1 justify-center mt-6">
-        <div className="flex flex-col p-2 bg-white rounded-box text-black-content dark:bg-[#1c2229]">
-          <span className="font-mono md:text-3xl text-2xl dark:text-white dark:bg-[#1c2229]">
-            {currentTime.hours.toString().padStart(2, "0")} :
-          </span>
-        </div>
-        <div className="flex flex-col p-2 bg-white rounded-box text-black-content dark:bg-[#1c2229]">
-          <span className="font-mono md:text-3xl text-2xl dark:text-white dark:bg-[#1c2229]">
-            {currentTime.minutes.toString().padStart(2, "0")} :
-          </span>
-        </div>
-        <div className="flex flex-col p-2 bg-white rounded-box text-black-content dark:bg-[#1c2229]">
-          <span className="font-mono md:text-3xl text-2xl dark:text-white dark:bg-[#1c2229]">
-            {currentTime.seconds.toString().padStart(2, "0")}
-          </span>
-        </div>
-      </div>
+    
+
+<div className="flex justify-center mt-6">
+  <div className="flex items-center p-2  text-black-500  dark:from-gray-800 dark:to-gray-900 rounded-xl shadow-lg ">
+    <span className="font-poppins md:text-3xl text-2xl tracking-widest transition-transform duration-300 ease-in-out transform hover:scale-110">
+      {currentTime.hours.toString().padStart(2, "0")}
+    </span>
+    <span className="font-poppins md:text-3xl text-2xl mx-1">:</span>
+    <span className="font-poppins md:text-3xl text-2xl tracking-widest transition-transform duration-300 ease-in-out transform hover:scale-110">
+      {currentTime.minutes.toString().padStart(2, "0")}
+    </span>
+    <span className="font-poppins md:text-3xl text-2xl mx-1">:</span>
+    <span className="font-poppins md:text-3xl text-2xl tracking-widest transition-transform duration-300 ease-in-out transform hover:scale-110">
+      {currentTime.seconds.toString().padStart(2, "0")}
+    </span>
+    <span className="font-poppins md:text-3xl text-2xl ml-2">
+      WIB
+    </span>
+  </div>
+</div>
+
+
+
 
       <Link
-        className="btn btn-primary mt-6 text-white mx-auto"
+        className="btn bg-green-500 hover:bg-green-700 mt-6 text-white mx-auto"
         to="/app/rekap-absensi"
       >
         {" "}
@@ -267,7 +342,13 @@ const AbsenceForm = () => {
               ✕
             </button>
             <h2 className="font-bold text-lg md:text-3xl dark:text-white">Absen Siswa PKL</h2>
-
+            <p className="text-lg font-semibold mb-4">
+  {isAlreadyAbsent
+    ? "Anda sudah absen masuk dan pulang"
+    : absenceType === "Masuk"
+    ? "Silahkan Absen Masuk"
+    : "Silahkan Absen Pulang"}
+</p>
             <label htmlFor="camera-select" className="block mt-4 dark:text-white">
               Pilih Kamera:
             </label>
@@ -304,6 +385,7 @@ const AbsenceForm = () => {
                 <video
                   ref={videoRef}
                   autoPlay
+                  style={{ width: "100%" }}
                   className="mt-4 w-full h-auto mx-auto object-cover cursor-pointer"
                 ></video>
                 <button
@@ -313,7 +395,7 @@ const AbsenceForm = () => {
                   {photo ? "Ambil Ulang" : "Ambil Foto"}
                   <i className="fa-solid fa-camera ml-2"></i>
                 </button>
-                <canvas ref={canvasRef} className="hidden"></canvas>
+                <canvas ref={canvasRef} className="hidden" width={640} height={480}></canvas>
               </>
             )}
             <div className="flex justify-center">

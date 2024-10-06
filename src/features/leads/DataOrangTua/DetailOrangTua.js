@@ -40,52 +40,29 @@ const LeadDetailsModal = ({ lead, show, onClose }) => {
                     <table className="w-full">
                         <tbody className="text-sm font-medium text-gray-700">
                             <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Nama</td>
+                                <td className="py-2 px-4 font-medium">Nama </td>
                                 <td className="py-2 px-4">{lead.nama}</td>
                             </tr>
                             <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Gender</td>
+                                <td className="py-2 px-4 font-medium">Jenis Kelamin </td>
                                 <td className="py-2 px-4">{lead.gender}</td>
                             </tr>
                             <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Tempat Lahir</td>
-                                <td className="py-2 px-4">{lead.placeOfBirth}</td>
-                            </tr>
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Tanggal Lahir</td>
-                                <td className="py-2 px-4">{lead.dateOfBirth}</td>
-                            </tr>
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Nomor Telepon</td>
+                                <td className="py-2 px-4 font-medium">Nomor Telepon </td>
                                 <td className="py-2 px-4">{lead.phoneNumber}</td>
                             </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div className="bg-white p-4 shadow rounded mt-6">
-                    <h3 className="text-lg font-semibold mb-6">Info Lainnya</h3>
-                    <table className="w-full">
-                        <tbody className="text-sm font-medium text-gray-700">
-                            {/* <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Email</td>
-                                <td className="py-2 px-4">{lead.email}</td>
+                            <tr className="border-b ml-2">
+                                <td className="py-2 px-4 font-medium">Alamat Orang Tua </td>
+                                <td className="py-2 px-4  ">{lead.alamat}</td>
                             </tr>
                             <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">No. Telepon</td>
-                                <td className="py-2 px-4">{lead.notelp}</td>
-                            </tr> */}
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Alamat</td>
-                                <td className="py-2 px-4 ">{lead.alamat}</td>
-                            </tr>
-                            <tr className="border-b">
-                                <td className="py-2 px-4 font-medium">Pekerjaan</td>
+                                <td className="py-2 px-4 font-medium">Pekerjaan </td>
                                 <td className="py-2 px-4 ">{lead.occupation}</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+\
 
             
                 <div className="modal-action flex justify-center mt-6">

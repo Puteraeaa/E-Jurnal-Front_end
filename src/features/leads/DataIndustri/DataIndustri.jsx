@@ -5,91 +5,40 @@ import TitleCard from "../../../components/Cards/TitleCard";
 import Api from "../../../api";
 import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 import PencilIcon from '@heroicons/react/24/outline/PencilIcon';
-
 import Cookies from "js-cookie";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import swal from "sweetalert2";
-import Map from "../../../components/Map";
+import template from '../../../assets/Template import-industri.xlsx';
 
 const Leads = () => {
     const { leads, loading, error } = useSelector((state) => state.lead);
     const dispatch = useDispatch();
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [selectedLead, setSelectedLead] = useState(null);
-    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-    const [isAddLeadModalOpen, setIsAddLeadModalOpen] = useState(false);
-    const itemsPerPage = 8;
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const itemsPerPage = 10;
     const [siswa, setSiswa] = useState([]);
     const [pagination, setPagination] = useState({
         currentPage: 1,
         perPage: 10,
         total: 0
     });
-    const [userId, setUserId] = useState("");
-    const [name, setName] = useState("");
-    const [bidang, setBidang] = useState("");
-    const [alamat, setAlamat] = useState("");
-    const [longitude, setLongitude] = useState("");
-    const [latitude, setLatitude] = useState("");
-    const [industryMentorName, setIndustryMentorName] = useState("");
-    const [industryMentorNo, setIndustryMentorNo] = useState("");
     const token = Cookies.get("token");
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await Api.post(`admin/industri`, {
-                user_id: userId,
-                name,
-                bidang,
-                alamat,
-                longitude,
-                latitude,
-                industryMentorName,
-                industryMentorNo,
-            }, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            });
-            toast.success(response.data.message, {
-                position: "top-right",
-                duration: 4000,
-            });
-        } catch (error) {
-            if (error.response && error.response.status === 422) {
-                const errors = error.response.data.errors;
-                for (const field in errors) {
-                    toast.error(`${field}: ${errors[field].join(', ')}`, {
-                        position: "top-right",
-                        duration: 4000,
-                    });
-                }
-            } else {
-                console.error("Error adding lead:", error);
-                toast.error("Failed to add lead.", {
-                    position: "top-right",
-                    duration: 4000,
-                });
-            }
-        }
-    };
 
     const fetchData = async (pageNumber = 1) => {
         try {
-            const response = await Api.get(`admin/industri`, {
+            const response = await Api.get(`admin/industri?page=${pageNumber}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 }
             });
             setSiswa(response.data.data.data);
-            console.log(response.data.data.data);
             setPagination({
-                currentPage: response.data.current_page,
-                perPage: response.data.per_page,
-                total: response.data.total
+                currentPage: response.data.data.current_page,
+                perPage: response.data.data.per_page,
+                total: response.data.data.total
             });
         } catch (error) {
             console.error("Error fetching data:", error);
@@ -97,59 +46,17 @@ const Leads = () => {
     };
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        fetchData(currentPage);
+    }, [currentPage]);
 
-    const handleDelete = async (leadId) => {
-        try {
-            const { isConfirmed } = await swal.fire({
-                title: "Yakin?",
-                text: "Apakah Anda yakin ingin menghapus data ini?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Hapus!",
-            });
-    
-            if (isConfirmed) {
-                const response = await Api.delete(`admin/users/${leadId}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    }
-                });
-                toast.success(response.data.message, {
-                    position: "top-right",
-                    duration: 4000,
-                });
-                fetchData();  // Re-fetch data after deletion
-            }
-        } catch (error) {
-            console.error("Error deleting lead:", error);
-            toast.error("Failed to delete lead.", {
-                position: "top-right",
-                duration: 4000,
-            });
-        }
-    };
-    
-    const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
-    };
-
-    const filteredLeads = siswa.filter((lead) =>
-        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
+    const totalPages = Math.ceil(pagination.total / pagination.perPage);
 
     const handleClick = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
 
     const renderPagination = () => {
-        let pages = [];
+        const pages = [];
         for (let i = 1; i <= totalPages; i++) {
             pages.push(
                 <button
@@ -164,9 +71,109 @@ const Leads = () => {
         return pages;
     };
 
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentItems = filteredLeads.slice(startIndex, endIndex);
+    const filteredLeads = siswa.filter(lead =>
+        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.industryMentorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.alamat.toLowerCase().includes(searchTerm.toLowerCase()) 
+    );
+    
+   
+
+    
+    const handleDelete = async (leadId) => {
+        try {
+            const { isConfirmed } = await swal.fire({
+                title: "Yakin?",
+                text: "Apakah Anda yakin ingin menghapus data ini?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Hapus!",
+            });
+
+            if (isConfirmed) {
+                const response = await Api.delete(`admin/users/${leadId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    }
+                });
+                toast.success(response.data.message, {
+                    position: "top-right",
+                    duration: 4000,
+                });
+                fetchData(currentPage); // Re-fetch data after deletion
+            }
+        } catch (error) {
+            console.error("Error deleting lead:", error);
+            toast.error("Failed to delete lead.", {
+                position: "top-right",
+                duration: 4000,
+            });
+        }
+    };
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1); // Reset to the first page when search term changes
+    };
+
+    // Filter the siswa array based on the search term
+   
+
+    const handleFileChange = (e) => {
+        setSelectedFile(e.target.files[0]);
+    };
+
+    const handleFileUpload = async () => {
+        if (!selectedFile) {
+            toast.error("No file selected.", {
+                position: "top-right",
+                duration: 4000,
+            });
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        setIsLoading(true); // Start loading
+
+        try {
+            const response = await Api.post("/admin/import", formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                },
+            });
+            toast.success("File uploaded successfully!", {
+                position: "top-right",
+                duration: 4000,
+            });
+            fetchData(currentPage);
+        } catch (error) {
+            console.error("Error uploading file:", error);
+            toast.error("Failed to upload file.", {
+                position: "top-right",
+                duration: 4000,
+            });
+        } finally {
+            setIsLoading(false); // Stop loading
+            setSelectedFile(null); // Reset selected file
+        }
+    };
+
+    const downloadTemplate = () => {
+        const link = document.createElement('a');
+        link.href = template;
+        link.setAttribute('download', 'Template import-industri.xlsx');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    // Calculate the pagination slice for filteredLeads
+   
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
@@ -183,14 +190,15 @@ const Leads = () => {
                         onChange={handleSearchChange}
                     />
                     <Link to={"/app/data/industri/tambah"}>
-                    <button
-                        className="btn btn-sm normal-case btn-primary w-full sm:w-auto"
-                       
-                    >
-                        Add New
-                    </button>
+                        <button
+                            className="btn btn-sm normal-case btn-primary w-full sm:w-auto"
+                        >
+                            Add New
+                        </button>
                     </Link>
-                   
+                    <button className="btn btn-sm normal-case btn-primary w-full sm:w-auto" onClick={() => document.getElementById('my_modal_5').showModal()}>
+                        Import Excel
+                    </button>
                 </div>
             }>
                 <div className="overflow-x-auto w-full">
@@ -206,7 +214,7 @@ const Leads = () => {
                             </tr>
                         </thead>
                         <tbody className="text-center">
-                            {currentItems.map((lead) => (
+                            {filteredLeads.map((lead) => (
                                 <tr key={lead.id}>
                                     <td>
                                         <div className="font-bold">{lead.name}</div>
@@ -215,14 +223,14 @@ const Leads = () => {
                                     <td>{lead.alamat}</td>
                                     <td>{lead.industryMentorName}</td>
                                     <td>{lead.industryMentorNo}</td>
-                                    <td className="">
-                                        <Link to={`/app/data/industri/edit/${lead.id}`}>
-                                            <button className="btn btn-square btn-ghost">
-                                                <PencilIcon className="w-5" />
+                                    <td className="flex justify-center space-x-2 sm:space-x-4">
+                                        <Link to={`/app/data/industri/edit/${lead.user_id}`}>
+                                            <button className="btn btn-sm btn-square btn-primary">
+                                                <PencilIcon className="h-4 w-4" />
                                             </button>
                                         </Link>
-                                        <button className="btn btn-square btn-ghost" onClick={() => handleDelete(lead.id)}>
-                                            <TrashIcon className="w-5" />
+                                        <button className="btn btn-sm btn-square btn-error" onClick={() => handleDelete(lead.user_id)}>
+                                            <TrashIcon className="h-4 w-4" />
                                         </button>
                                     </td>
                                 </tr>
@@ -235,10 +243,21 @@ const Leads = () => {
                 </div>
             </TitleCard>
 
-           
             <ToastContainer />
 
-
+            <dialog id="my_modal_5" className="modal">
+                <form method="dialog" className="modal-box">
+                    <h3 className="font-bold text-lg">Upload Excel Siswa</h3>
+                    <p className="py-4">
+                        Silahkan upload file Excel siswa pada field di bawah ini.
+                    </p>
+                    <button className="btn btn-sm" onClick={downloadTemplate}>Download Template</button>
+                    <input type="file" onChange={handleFileChange} />
+                    <button type="button" className="btn btn-sm btn-primary" onClick={handleFileUpload} disabled={isLoading}>
+                        {isLoading ? "Uploading..." : "Upload"}
+                    </button>
+                </form>
+            </dialog>
         </>
     );
 };

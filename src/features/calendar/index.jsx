@@ -34,29 +34,40 @@ function Calendar() {
       const response = await Api.get("/admin/jadwal", {
         headers: { Authorization: `Bearer ${token}` }
       });
-
+  
       const data = response.data.data;
       const formattedEvents = Object.keys(data).flatMap((date) => {
         const groupDateMoment = momentTZ(date).tz("Asia/Jakarta");
-
+  
         return data[date].map((event) => {
           const startDate = groupDateMoment.startOf("day").format("YYYY-MM-DD");
           const endDate = groupDateMoment.endOf("day").format("YYYY-MM-DD");
-
+  
+          const theme = event.status === "kunjungan"
+            ? "PURPLE"
+            : event.status === "penjemputan"
+            ? "ORANGE"
+            : event.status === "keberangkatan"
+            ? "BLUE"
+            : "DEFAULT_COLOR"; // Warna default
+  
           return {
             title: `${event.status} PKL ke ${event.industri_name}`,
             start: startDate,
             end: endDate,
             company: event.user_name,
-            theme: event.status === "kunjungan" ? "BLUE" : "GREEN",
+            theme, // Menambahkan theme yang sesuai dengan status
             industri_name: event.industri_name
           };
         });
       });
-
+  
       setEvents(formattedEvents);
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error fetching events", error);
+    }
   };
+
 
   const fetchData = async () => {
     try {
@@ -82,68 +93,74 @@ function Calendar() {
   };
 
   const fixEvent = async () => {
-    const eventDate = document.getElementById("eventDate").value;
-    const eventType = document.getElementById("eventType").value;
+  const eventDate = document.getElementById("eventDate").value;
+  const eventType = document.getElementById("eventType").value;
 
-    if (eventDate && eventType && selectedCompany) {
-      const modal = document.getElementById("my_modal_1");
-      if (modal) {
-        modal.close();
-      }
+  if (eventDate && eventType && selectedCompany) {
+    const modal = document.getElementById("my_modal_1");
+    if (modal) {
+      modal.close();
+    }
 
-      const result = await swal.fire({
-        title: "Absen",
-        text: "Apakah Anda yakin ingin menambahkan jadwal?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Ya, absen!"
-      });
+    const result = await swal.fire({
+      title: "Absen",
+      text: "Apakah Anda yakin ingin menambahkan jadwal?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Ya, absen!"
+    });
 
-      if (result.isConfirmed) {
-        const theme = eventType === "kunjungan" ? "ORANGE" : "GREEN";
-        const eventDateMoment = moment(eventDate).startOf("day");
-        const newEventObj = {
-          status: eventType,
-          date: eventDateMoment.format("YYYY-MM-DD"),
-          user_id: user.id,
-          industri_id: selectedCompany.value
-        };
+    if (result.isConfirmed) {
+      const theme = eventType === "kunjungan"
+        ? "PURPLE"
+        : eventType === "penjemputan"
+        ? "ORANGE"
+        : eventType === "keberangkatan"
+        ? "BLUE"
+        : "DEFAULT_COLOR";
 
-        try {
-          await Api.post("/admin/jadwal", newEventObj, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json"
-            }
-          });
+      const eventDateMoment = moment(eventDate).startOf("day");
+      const newEventObj = {
+        status: eventType,
+        date: eventDateMoment.format("YYYY-MM-DD"),
+        user_id: user.id,
+        industri_id: selectedCompany.value
+      };
 
-          // Create local start and end times for calendar display
-          const localStart = eventDateMoment.format("YYYY-MM-DD");
-          const localEnd = eventDateMoment.endOf("day").format("YYYY-MM-DD");
+      try {
+        await Api.post("/admin/jadwal", newEventObj, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
 
-          setEvents((prevEvents) => [
-            ...prevEvents,
-            {
-              ...newEventObj,
-              start: localStart,
-              end: localEnd,
-              title: `${eventType} ke ${selectedCompany.label}`,
-              theme
-            }
-          ]);
-          toast.success("New Event Added!");
-        } catch (error) {
-          toast.error("Error adding event. Please try again.");
-        }
-      } else {
-        toast.error("Please fill in all required fields");
+        const localStart = eventDateMoment.format("YYYY-MM-DD");
+        const localEnd = eventDateMoment.endOf("day").format("YYYY-MM-DD");
+
+        setEvents((prevEvents) => [
+          ...prevEvents,
+          {
+            ...newEventObj,
+            start: localStart,
+            end: localEnd,
+            title: `${eventType} ke ${selectedCompany.label}`,
+            theme
+          }
+        ]);
+        toast.success("New Event Added!");
+      } catch (error) {
+        toast.error("Error adding event. Please try again.");
       }
     } else {
       toast.error("Please fill in all required fields");
     }
-  };
+  } else {
+    toast.error("Please fill in all required fields");
+  }
+};
 
   const onDateClick = (date) => {
     const filteredEvents = events.filter((event) =>
@@ -192,8 +209,9 @@ function Calendar() {
               className="select select-bordered w-full mb-4"
               required
             >
-              <option value="kunjungan">Kunjungan PKL</option>
               <option value="keberangkatan">Keberangkatan PKL</option>
+              <option value="kunjungan">Kunjungan PKL</option>
+              <option value="penjemputan">Penjemputan PKL</option>
             </select>
 
             <label className="block mb-2">Perusahaan:</label>

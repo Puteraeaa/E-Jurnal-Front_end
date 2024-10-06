@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 
 // Buat instance Axios
 const Api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/',
+  baseURL: 'https://api.jurnal.pplgsmkn1ciomas.my.id/api',
   headers: {
     "Accept": "application/json",
     "Content-Type": "application/json",
@@ -15,7 +15,6 @@ let requestCount = 0;
 
 Api.interceptors.request.use(request => {
   requestCount++;
-  console.log(`Total API requests: ${requestCount}`);
   return request;
 });
 

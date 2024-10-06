@@ -8,11 +8,12 @@ import HeartIcon from "@heroicons/react/24/outline/HeartIcon"
 
 
 function AmountStats({}){
+  
     return(
         <>
         
         <div className="stats bg-base-100 shadow">
-  <Link to={"/app/leads"} className="stat" style={{ width: "100%" }}>
+  <Link to={"/app/data/siswa"} className="stat" style={{ width: "100%" }}>
   <div className="flex mt-2 sm:mt-8 sm:mb-8">
       <i className="fa-solid fa-user text-xl sm:text-3xl mr-4"></i>
       <div className="text-Lg sm:text-3xl font-bold">Data User</div>

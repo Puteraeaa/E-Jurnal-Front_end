@@ -23,7 +23,11 @@ const Dashboard = () => {
             Authorization: `Bearer ${token}`
           }
         });
-      } else if (role === "guru" || role === "orang tua") {
+      } else if (
+        role === "guru" ||
+        role === "orang tua" ||
+        role === "industri"
+      ) {
         response = await Api.get(`admin/indexRole-jurnal`, {
           headers: {
             Authorization: `Bearer ${token}`
@@ -40,7 +44,6 @@ const Dashboard = () => {
       setJurnalRecords(response.data.data.data || []);
     } catch (error) {
       toast.error("Failed to fetch jurnal records");
-      console.log(error);
     }
   };
 
@@ -52,7 +55,7 @@ const Dashboard = () => {
 
       if (role === "siswa") {
         endpoint = `/admin/absenSiswaOnly`;
-      } else if (role === "guru" || role === "orang tua") {
+      } else if (role === "guru" || role === "orang tua" || role === "industri") {
         endpoint = `/admin/absenSiswa`;
       } else {
         endpoint = `/admin/absence`;
@@ -67,34 +70,42 @@ const Dashboard = () => {
       setAttendanceRecords(Object.keys(response.data.data) || []);
     } catch (error) {
       toast.error("Failed to fetch attendance records");
-      console.log(error);
     }
   };
 
   const fetchEvents = async () => {
+    const role = user.roles;
     try {
-      const response = await Api.get(`/admin/jadwal`, {
+
+      let endpoint = "";
+
+      if (role === "siswa") {
+        endpoint = `/admin/getSchedulleStudent`;
+      } else {
+        endpoint = `/admin/jadwal`;
+      }
+
+
+      const response = await Api.get(endpoint, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
 
       const allData = response.data.data;
-      console.log("Data dari API:", allData);
+   
 
-      const today = new Date().toISOString().split('T')[0]; // Format tanggal hari ini
+      const today = new Date().toISOString().split("T")[0]; // Format tanggal hari ini
 
       // Jika allData adalah objek dengan tanggal sebagai kunci
-      if (typeof allData === 'object' && !Array.isArray(allData)) {
+      if (typeof allData === "object" && !Array.isArray(allData)) {
         const todayRecords = allData[today] || [];
-        console.log("Data untuk hari ini:", todayRecords);
         setTeacherDepartureRecords(todayRecords);
       } else {
         console.error("Data tidak dalam format objek.");
       }
     } catch (error) {
       toast.error("Failed to fetch teacher departure records");
-      console.log(error);
     }
   };
 
@@ -111,7 +122,8 @@ const Dashboard = () => {
     return () => clearInterval(interval); // Bersihkan interval saat komponen unmount
   }, []);
 
-  const formattedTime = time.toLocaleTimeString();
+  const formattedTime = time.toLocaleTimeString("id-ID");
+  
 
   return (
     <div className="dark:text-gray-100 flex flex-wrap gap-y-6 sm:gap-6 gap-2">
@@ -139,7 +151,7 @@ const Dashboard = () => {
               </svg>
             </div>
             <div className="mt-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
-              {formattedTime}
+              {formattedTime} WIB
             </div>
             <div className="mt-2 text-gray-500 dark:text-gray-400 text-sm">
               Jam yang menunjukkan waktu saat ini secara real-time.
@@ -223,12 +235,15 @@ const Dashboard = () => {
               </svg>
             </div>
             <div className="mt-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
-              <p className="text-xl">{teacherDepartureRecords.map(record => (
-            <li key={record.id} className="list-none">
-              {record.status} ke {record.industri_name}
-            </li>
-          ))}</p>
-              
+              <p className="text-xl">
+                {teacherDepartureRecords.length > 0
+                  ? teacherDepartureRecords.map((record) => (
+                      <li key={record.id} className="list-none">
+                        {record.status} ke {record.industri_name}
+                      </li>
+                    ))
+                  : "Tidak ada aktifitas guru"}
+              </p>
             </div>
             <div className="mt-2 text-gray-500 dark:text-gray-400 text-sm">
               Data keberangkatan guru
@@ -238,7 +253,7 @@ const Dashboard = () => {
       ) : userRole === "guru" ||
         userRole === "industri" ||
         userRole === "orang tua" ? (
-          <div className="flex flex-wrap gap-y-6 sm:gap-6 gap-2">
+        <div className="flex flex-wrap gap-y-6 sm:gap-6 gap-2">
           {/* Komponen untuk siswa */}
           <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 w-full sm:w-[365px]">
             <div className="flex items-center justify-between">
@@ -345,19 +360,22 @@ const Dashboard = () => {
               </svg>
             </div>
             <div className="mt-2 text-3xl font-bold text-gray-800 dark:text-gray-100">
-              <p className="text-base">{teacherDepartureRecords.map(record => (
-            <li key={record.id} className="list-none">
-              {record.status} PKL ke {record.industri_name}
-            </li>
-          ))}</p>
-              
+              <p className="text-xl mt-5">
+              {teacherDepartureRecords.length > 0
+                  ? teacherDepartureRecords.map((record) => (
+                      <li key={record.id} className="list-none">
+                        {record.status} ke {record.industri_name}
+                      </li>
+                    ))
+                  : "Tidak ada aktifitas guru"}
+              </p>
             </div>
             <div className="mt-2 text-gray-500 dark:text-gray-400 text-sm">
               Data Kegiatan guru
             </div>
           </div>
         </div>
-      ) : null}
+      ) : 'Loading...'}
     </div>
   );
 };

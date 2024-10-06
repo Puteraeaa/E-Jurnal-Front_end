@@ -19,6 +19,7 @@ export default function UserCreate() {
   const [tools, setTools] = useState("");
   const [image, setImage] = useState(null);
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const token = Cookies.get("token");
 
@@ -34,22 +35,24 @@ export default function UserCreate() {
     if (!tanggal) newErrors.tanggal = ["Tanggal Wajib diisi"];
     if (!startTime) newErrors.start_time = ["Start Time Wajib diisi"];
     if (!endTime) newErrors.end_time = ["End Time Wajib diisi"];
-    if (!tools) newErrors.tools = ["Tools Wajib diisi"];
+    if (!tools) newErrors.tools = ["Alat yang Digunakan Wajib diisi"];
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
+    setIsLoading(true);
+
     try {
       const result = await swal.fire({
-        title: "Memperbarui Program",
-        text: "Apakah Anda yakin ingin Memperbarui Program?",
+        title: "Tambah Jurnal Harian",
+        text: "Apakah Anda yakin ingin Menambahkan jurnal harian?",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
         cancelButtonColor: "#d33",
-        confirmButtonText: "Ya, Perbarui!"
+        confirmButtonText: "Ya, Tambah!"
       });
 
       if (result.isConfirmed) {
@@ -73,13 +76,15 @@ export default function UserCreate() {
           duration: 4000
         });
 
-        navigate("/app/laporan");
+        navigate("/app/laporan-pkl");
       }
     } catch (error) {
       toast.error("Failed to update program. Please try again later.", {
         position: "top-right",
         duration: 4000
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -124,7 +129,7 @@ export default function UserCreate() {
 
             <div className="mb-4">
               <label className="block text-gray-700 font-bold mb-2">
-                Tools Used
+                Alat Yang Digunakan
               </label>
               <input
                 type="text"
@@ -186,12 +191,27 @@ export default function UserCreate() {
             </div>
 
             <div>
-              <button
-                type="submit"
-                className="w-full px-4 py-2 text-white bg-blue-500 hover:bg-blue-700 rounded-lg"
-              >
-                <i className="fa fa-save mr-2"></i> Save
-              </button>
+              <div>
+                <button
+                  type="submit"
+                  className={`w-full px-4 py-2 text-white ${
+                    isLoading
+                      ? "bg-gray-500 cursor-not-allowed"
+                      : "bg-blue-500 hover:bg-blue-700"
+                  } rounded-lg`}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <i className="fa fa-spinner fa-spin mr-2"></i> Loading...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa fa-save mr-2"></i> Simpan
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </form>
         </div>

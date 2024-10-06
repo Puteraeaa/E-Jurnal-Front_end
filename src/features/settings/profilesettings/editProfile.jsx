@@ -7,7 +7,6 @@ import { toast } from 'react-hot-toast';
 const token = Cookies.get('token');
 
 const user = JSON.parse(Cookies.get("user"));
-console.log('p',user);
 
 const EditStudentPage = () => {
     const navigate = useNavigate();
@@ -17,6 +16,9 @@ const EditStudentPage = () => {
     const [formData, setFormData] = useState({
         user_id: "",
         name: "",
+        username: "",
+        password: "",
+        password_confirmation: "",
         nis: "",
         placeOfBirth: "",
         dateOfBirth: "",
@@ -29,6 +31,7 @@ const EditStudentPage = () => {
         departemen_id: "",
         parents_id: "",
         teacher_id: "",
+        roles : "siswa",
 
         
     });
@@ -47,11 +50,14 @@ const EditStudentPage = () => {
             
             const student = response.data.data.student;
             setUserId(student.user_id)
-            console.log(student);
+
             
             setFormData({
                 user_id: student.user_id || "",
-                name: student.name || "",
+                username: response.data.data.name|| "",
+                password: "",
+                password_confirmation: "",  
+                name: student.name,
                 nis: student.nis || "",
                 placeOfBirth: student.placeOfBirth || "",
                 dateOfBirth: student.dateOfBirth || "",
@@ -90,10 +96,16 @@ const EditStudentPage = () => {
     const handleSubmit = async (e) => {
         const id = user.id;
         e.preventDefault();
-    
-        // Log the form data before submitting
-        console.log("Form data to be submitted:", formData);
-    
+
+
+        if (formData.password && !formData.password_confirmation) {
+            toast.error("Konfirmasi password wajib diisi jika Anda mengisi password.", {
+                position: "top-right",
+                duration: 4000,
+            });
+            return;
+        }
+
         try {
             await Api.put(`admin/users/${userId}`, formData, {
                 headers: {
@@ -108,29 +120,30 @@ const EditStudentPage = () => {
             navigate('/app/settings-profile');
         } catch (error) {
             if (error.response) {
-                console.error("Error response data:", error.response.data);
+                
     
                 const errorMessages = error.response.data.errors;
                 if (errorMessages) {
                     for (const [field, messages] of Object.entries(errorMessages)) {
-                        console.error(`Field: ${field}, Errors: ${messages.join(', ')}`);
                     }
                     toast.error(`Failed to update lead: ${Object.values(errorMessages)[0][0]}`, {
                         position: "top-right",
                         duration: 4000,
                     });
+                    console.error("Error response data:", error.response.data);
                 } else {
                     toast.error(`Failed to update lead: ${error.response.data.message || 'Please check the form fields.'}`, {
                         position: "top-right",
                         duration: 4000,
                     });
+                    
                 }
             } else {
-                console.error("Error updating lead:", error);
                 toast.error("Failed to update lead.", {
                     position: "top-right",
                     duration: 4000,
                 });
+                
             }
         }
     };
@@ -148,6 +161,42 @@ const EditStudentPage = () => {
                 <p className="text-center border-b pb-4 mb-4">Silakan update form di bawah!</p>
 
                 <form onSubmit={handleSubmit}>
+
+                <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Username Siswa</label>
+                        <input
+                            type="text"
+                            name="username"
+                            value={formData.username}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-4">
+    <label className="block text-gray-700 font-bold mb-2">Password Siswa </label>
+    <input
+        type="password"
+        name="password"
+        value={formData.password}
+        onChange={handleChange}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+    />
+</div>
+
+<div className="mb-4">
+    <label className="block text-gray-700 font-bold mb-2">Konfirmasi Password</label>
+    <input
+        type="password"
+        name="password_confirmation"
+        value={formData.password_confirmation}
+        onChange={handleChange}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+        required={formData.password ? true : false} // Required hanya jika password terisi
+    />
+</div>
+
 
                     <div className="mb-4">
                         <label className="block text-gray-700 font-bold mb-2">Nama Siswa</label>

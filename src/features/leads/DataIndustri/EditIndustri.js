@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Map from '../../../components/Map'; // Adjust import path as needed
+import Map from '../../../components/Map'; // Sesuaikan path impor jika diperlukan
 import Api from '../../../api';
 import Cookies from 'js-cookie';
 import { toast } from 'react-hot-toast';
@@ -9,9 +9,9 @@ const token = Cookies.get('token');
 
 const EditLeadPage = () => {
     const navigate = useNavigate();
-    const { id } = useParams(); // Assuming your route has an `id` parameter
+    const { id } = useParams(); // Mengambil parameter id dari route
     const [formData, setFormData] = useState({
-        user_id: "",
+        username: "",
         name: "",
         bidang: "",
         alamat: "",
@@ -19,19 +19,38 @@ const EditLeadPage = () => {
         latitude: "",
         industryMentorName: "",
         industryMentorNo: "",
+        roles: "",
     });
 
     useEffect(() => {
-        // Fetch the existing data when the component mounts
+        // Mengambil data industri ketika komponen dimuat
         const fetchLeadData = async () => {
             try {
-                const response = await Api.get(`admin/industri/${id}`, {
+                const response = await Api.get (`admin/users/${id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                console.log("Fetched lead data:", response.data); // Debugging line
-                setFormData(response.data.data);
+                if (response.data && response.data.data) {
+                    const { name: username, roles, industries } = response.data.data;
+                    setFormData({
+                        username: username || "",
+                        name: industries?.name || "",
+                        bidang: industries?.bidang || "",
+                        alamat: industries?.alamat || "",
+                        longitude: industries?.longitude || "",
+                        latitude: industries?.latitude || "",
+                        industryMentorName: industries?.industryMentorName || "",
+                        industryMentorNo: industries?.industryMentorNo || "",
+                        roles: roles.join(", ") || "", // Menggabungkan roles menjadi string
+                    });
+                } else {
+                    console.error("Unexpected response structure:", response.data);
+                    toast.error("Failed to load lead data. Data format is incorrect.", {
+                        position: "top-right",
+                        duration: 4000,
+                    });
+                }
             } catch (error) {
                 console.error("Error fetching lead data:", error);
                 toast.error("Failed to load lead data.", {
@@ -52,7 +71,10 @@ const EditLeadPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await Api.put(`admin/industri/${id}`, formData, {
+            await Api.put(`admin/users/${id}`, {
+                ...formData,
+                roles: formData.roles.split(", ").map(role => role.trim()), // Mengubah string roles kembali menjadi array
+            }, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -68,10 +90,8 @@ const EditLeadPage = () => {
 
                 const errorMessages = error.response.data.errors;
                 if (errorMessages) {
-                    for (const [field, messages] of Object.entries(errorMessages)) {
-                        console.error(`Field: ${field}, Errors: ${messages.join(', ')}`);
-                    }
-                    toast.error(`Failed to update lead: ${Object.values(errorMessages)[0][0]}`, {
+                    const firstErrorMessage = Object.values(errorMessages)[0][0];
+                    toast.error(`Failed to update lead: ${firstErrorMessage}`, {
                         position: "top-right",
                         duration: 4000,
                     });
@@ -122,6 +142,8 @@ const EditLeadPage = () => {
         }
     };
 
+    const { username, name, bidang, alamat, longitude, latitude, industryMentorName, industryMentorNo, roles } = formData;
+
     return (
         <div className="container mx-auto my-10 px-4">
             <div className="bg-white shadow-lg rounded-lg p-6 border-t-4 border-blue-500">
@@ -129,12 +151,12 @@ const EditLeadPage = () => {
                 <p className="text-center border-b pb-4 mb-4">Silakan edit form di bawah!</p>
 
                 <form onSubmit={handleSubmit}>
-                    <div className="mb-4 " hidden>
-                        <label className="block text-gray-700 font-bold mb-2">User ID</label>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 font-bold mb-2">Username</label>
                         <input
                             type="text"
-                            name="user_id"
-                            value={formData.user_id}
+                            name="username"
+                            value={username}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                             required
@@ -146,7 +168,7 @@ const EditLeadPage = () => {
                         <input
                             type="text"
                             name="name"
-                            value={formData.name}
+                            value={name}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                             required
@@ -158,7 +180,7 @@ const EditLeadPage = () => {
                         <input
                             type="text"
                             name="bidang"
-                            value={formData.bidang}
+                            value={bidang}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                             required
@@ -170,7 +192,7 @@ const EditLeadPage = () => {
                         <input
                             type="text"
                             name="alamat"
-                            value={formData.alamat}
+                            value={alamat}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                             required
@@ -182,7 +204,7 @@ const EditLeadPage = () => {
                         <input
                             type="text"
                             name="longitude"
-                            value={formData.longitude}
+                            value={longitude}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                             required
@@ -195,7 +217,7 @@ const EditLeadPage = () => {
                         <input
                             type="text"
                             name="latitude"
-                            value={formData.latitude}
+                            value={latitude}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                             required
@@ -226,7 +248,7 @@ const EditLeadPage = () => {
                         <input
                             type="text"
                             name="industryMentorName"
-                            value={formData.industryMentorName}
+                            value={industryMentorName}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                             required
@@ -234,11 +256,23 @@ const EditLeadPage = () => {
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">No Pembimbing</label>
+                        <label className="block text-gray-700 font-bold mb-2">No. Pembimbing</label>
                         <input
                             type="text"
                             name="industryMentorNo"
-                            value={formData.industryMentorNo}
+                            value={industryMentorNo}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-4" hidden>
+                        <label className="block text-gray-700 font-bold mb-2">Roles</label>
+                        <input
+                            type="text"
+                            name="roles"
+                            value={roles}
                             onChange={handleChange}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                             required
@@ -255,7 +289,7 @@ const EditLeadPage = () => {
                         <button
                             type="button"
                             className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg"
-                            onClick={() => navigate('/app/data/industri')}
+                            onClick={() => navigate('/app/data/users')}
                         >
                             Cancel
                         </button>

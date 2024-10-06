@@ -25,10 +25,22 @@ const AttendanceSummary = () => {
   const [paginationLinks, setPaginationLinks] = useState([]);
   const [photoTab, setPhotoTab] = useState("check-in");
   const [mapTab, setMapTab] = useState("check-in");
+  const [sortOrder, setSortOrder] = useState("asc"); // Default to ascending
+
+
 
   const token = Cookies.get("token");
   const role = JSON.parse(Cookies.get("user")).roles;
   const recordsPerPage = 10;
+
+  const sortAttendanceRecords = (records) => {
+    return records.sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return sortOrder === "asc" ? dateA - dateB : dateB - dateA; // Ascending or Descending
+    });
+  };
+  
 
   const normalizeData = (data) => {
     return Object.values(data).map((day) => {
@@ -36,12 +48,23 @@ const AttendanceSummary = () => {
       const checkOutData = day.entries["Pulang"]?.entries[0] || {};
 
       return {
-        date: day.date,
-        name: checkInData.users?.name || "-",
+        date: day.date
+          ? `${
+              ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"][
+                new Date(day.date).getDay()
+              ] || ""
+            }, ${day.date}`
+          : "-",
+        name:
+          checkInData.users.students?.name || checkInData.users?.name || "-",
         statusMasuk: checkInData.status || "-",
         statusPulang: checkOutData.status || "-",
-        arrivalTime: checkInData.departureTime || "Belum Absen Masuk",
-        departureTime: checkOutData.departureTime || "Belum Absen Keluar",
+        arrivalTime: checkInData.departureTime
+          ? checkInData.departureTime + " WIB"
+          : "Belum Absen Masuk",
+        departureTime: checkOutData.departureTime
+          ? checkOutData.departureTime + " WIB"
+          : "Belum Absen Keluar",
         arrivalImage: checkInData.image || "",
         departureImage: checkOutData.image || "",
         latitudeMasuk: checkInData.latitude || null,
@@ -53,52 +76,54 @@ const AttendanceSummary = () => {
     });
   };
 
-  const getAttendanceRecords = async (page) => {
+  const getAttendanceRecords = async () => {
     try {
       let endpoint = "";
 
       if (role === "siswa") {
-        endpoint = `/admin/absenSiswaOnly?page=${page}&limit=${recordsPerPage}`;
-      } else if (role === "guru" || role === "orang tua") {
-        endpoint = `/admin/absenSiswa?page=${page}&limit=${recordsPerPage}`;
+        endpoint = `/admin/absenSiswaOnly`;
+      } else if (role === "guru" || role === "orang tua" || role === "industri") {
+        endpoint = `/admin/absenSiswa`;
       } else {
-        endpoint = `/admin/absence?page=${page}&limit=${recordsPerPage}`;
+        endpoint = `/admin/absence`;
       }
 
       const response = await Api.get(endpoint, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       const data = response?.data?.data || [];
-
       if (typeof data === "object") {
         const normalizedData = normalizeData(data);
         setAttendanceRecords(normalizedData);
+        setTotalPages(Math.ceil(normalizedData.length / recordsPerPage));
       } else {
         setAttendanceRecords([]);
       }
-
-      setTotalPages(response?.data?.totalPages || 1);
-      setPaginationLinks(response?.data?.links || []);
     } catch (error) {
       toast.error("Failed to fetch attendance records");
     }
   };
 
   useEffect(() => {
-    getAttendanceRecords(currentPage);
-  }, [currentPage]);
+    getAttendanceRecords();
+  }, []);
 
-  const handlePageChange = (url) => {
-    const urlParams = new URLSearchParams(url.split("?")[1]);
-    const page = urlParams.get("page");
 
-    if (page) {
-      setCurrentPage(parseInt(page, 10));
+  
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
     }
   };
+
+  const paginatedRecords = attendanceRecords.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
 
   // Component to adjust map view
   const MapViewUpdater = ({ position }) => {
@@ -114,57 +139,74 @@ const AttendanceSummary = () => {
   };
 
   return (
-    <div className="container mx-auto mt-5 px-4 md:mt-10 md:px-8 mb-[400px]">
+    <div className="container mx-auto mt-5 px-4   mb-[400px]">
       <h1 className="text-2xl font-bold mb-6 text-center md:text-3xl">
-        Rekap Absensi
+        Rekap Absensi 
       </h1>
+      <div className="flex justify-end px-4 items-center mb-4">
+  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mr-4">
+    Urutkan Berdasarkan:
+  </h3>
+  <select
+    value={sortOrder}
+    onChange={(e) => setSortOrder(e.target.value)}
+    className="border border-gray-300 rounded p-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400"
+  >
+    <option value="asc">Urutkan Terbaru ^</option>
+    <option value="desc">Urutkan Terlama v</option>
+  </select>
+</div>
+
+
 
       <div className="overflow-x-auto w-full">
         <table className="min-w-full bg-white border border-gray-300 dark:text-white dark:bg-[#1c2229]">
           <thead>
             <tr className="bg-gray-200 text-gray-700">
-              <th className="py-2 px-4 border-b">No</th>
-              <th className="py-2 px-4 border-b">Tanggal</th>
-              <th className="py-2 px-4 border-b">Nama</th>
-              <th className="py-2 px-4 border-b">Status</th>
-              <th className="py-2 px-4 border-b">Waktu</th>
-              <th className="py-2 px-4 border-b">Photo</th>
-              <th className="py-2 px-4 border-b">Action</th>
+              <th className="py-4 px-6 border-b text-center">No</th>
+              <th className="py-4 px-6 border-b text-center">Tanggal</th>
+              <th className="py-4 px-6 border-b text-center">Nama</th>
+              <th className="py-4 px-6 border-b text-center">Status</th>
+              <th className="py-4 px-6 border-b text-center">Waktu Masuk</th>
+              <th className="py-4 px-6 border-b text-center">Waktu Keluar</th>
+              <th className="py-4 px-6 border-b text-center">Photo</th>
+              <th className="py-4 px-6 border-b text-center">Action</th>
             </tr>
           </thead>
           <tbody>
-            {attendanceRecords.length > 0 ? (
-              attendanceRecords.map((record, index) => (
-                <tr key={index}>
-                  <td className="py-2 px-4 border-b text-center">
+          {sortAttendanceRecords(paginatedRecords).length > 0 ? (
+              paginatedRecords.map((record, index) => (
+                <tr key={index} className="h-20">
+                  <td className="py-4 px-6 border-b text-center">
                     {(currentPage - 1) * recordsPerPage + index + 1}
                   </td>
-                  <td className="py-2 px-4 border-b text-center">
+                  <td className="md:py-4 md:px-6 border-b text-center whitespace-normal break-words ">
                     {record.date}
                   </td>
-                  <td className="py-2 px-4 border-b text-center">
+                  <td className="py-4 px-6 border-b text-center whitespace-normal break-words">
                     {record.name}
                   </td>
-                  <td className="py-2 px-4 border-b text-center">
+                  <td className="py-4 px-6 border-b text-center whitespace-normal break-words">
                     {record.status}
                   </td>
-                  <td className="py-2 px-4 border-b text-center">
-                    Masuk: {record.arrivalTime}
-                    <br />
-                    Pulang: {record.departureTime}
+                  <td className="py-4 px-6 border-b text-center whitespace-normal break-words">
+                    {record.arrivalTime}
                   </td>
-                  <td className="py-2 px-4 border-b text-center">
+                  <td className="py-4 px-6 border-b text-center whitespace-normal break-words">
+                    {record.departureTime}
+                  </td>
+                  <td className="py-4 px-6 border-b text-center whitespace-normal break-words">
                     <img
-                      src={record.arrivalImage || record.departureImage}
+                      src={record.arrivalImage || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
                       alt="Attendance"
-                      className="w-12 h-12 object-cover mx-auto cursor-pointer rounded-full md:w-20 md:h-20"
+                      className="w-16 h-16 object-cover mx-auto cursor-pointer rounded-full"
                       onClick={() => {
                         setSelectedRecord(record);
                         document.getElementById("my_modal_3").showModal();
                       }}
                     />
                   </td>
-                  <td className="py-2 px-4 border-b text-center">
+                  <td className="py-4 px-6 border-b text-center whitespace-normal break-words">
                     <button
                       className="btn btn-primary btn-sm pl-2"
                       onClick={() => {
@@ -175,7 +217,7 @@ const AttendanceSummary = () => {
                       Lihat Posisi
                     </button>
                     {hasAnyPermission(["siswa.delete"]) && (
-                      <button className="btn btn-primary btn-sm ml-2">
+                      <button className="btn bg-green-500 btn-sm md:ml-2 mt-2">
                         Verifikasi
                       </button>
                     )}
@@ -184,7 +226,7 @@ const AttendanceSummary = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="7" className="py-2 px-4 text-center">
+                <td colSpan="7" className="py-4 px-6 text-center">
                   No records found
                 </td>
               </tr>
@@ -201,34 +243,49 @@ const AttendanceSummary = () => {
               </button>
             </form>
             <h3 className="font-bold text-lg mb-2">Absensi</h3>
-            <div className="tabs">
-              <a
-                className={`tab tab-lifted ${
-                  photoTab === "check-in" ? "tab-active" : ""
-                }`}
-                onClick={() => setPhotoTab("check-in")}
-              >
-                Foto Masuk
-              </a>
-              <a
-                className={`tab tab-lifted ${
-                  photoTab === "check-out" ? "tab-active" : ""
-                }`}
-                onClick={() => setPhotoTab("check-out")}
-              >
-                Foto Pulang
-              </a>
-            </div>
+             {/* Tab navigasi untuk Absensi */}
+        <div className="tabs">
+          <a
+            className={`tab tab-lifted ${
+              mapTab === "check-in"
+                ? "tab-active border-b-2 border-blue-500"
+                : ""
+            }`}
+            onClick={() => {
+              setMapTab("check-in");
+              setPhotoTab("check-in");
+            }}
+          >
+            Masuk
+          </a>
+          <a
+            className={`tab tab-lifted ${
+              mapTab === "check-out"
+                ? "tab-active border-b-2 border-blue-500"
+                : ""
+            }`}
+            onClick={() => {
+              setMapTab("check-out");
+              setPhotoTab("check-out");
+            }}
+          >
+            Pulang
+          </a>
+        </div>
             <div className="mt-4">
-              <img
-                src={
-                  photoTab === "check-in"
-                    ? selectedRecord?.arrivalImage
-                    : selectedRecord?.departureImage
-                }
-                alt="Attendance"
-                className="w-full h-auto object-cover"
-              />
+              {photoTab === "check-out" && !selectedRecord?.departureImage ? (
+                <p className="text-red-500">Belum Absen Pulang</p>
+              ) : (
+                <img
+                  src={
+                    photoTab === "check-in"
+                      ? selectedRecord?.arrivalImage
+                      : selectedRecord?.departureImage
+                  }
+                  alt="Attendance"
+                  className="w-full h-auto object-cover"
+                />
+              )}
             </div>
           </div>
         </dialog>
@@ -242,10 +299,13 @@ const AttendanceSummary = () => {
               </button>
             </form>
             <h3 className="font-bold text-lg mb-2">Lokasi Absen</h3>
+
             <div className="tabs">
               <a
                 className={`tab tab-lifted ${
-                  mapTab === "check-in" ? "tab-active" : ""
+                  mapTab === "check-in"
+                    ? "tab-active border-b-2 border-blue-500"
+                    : ""
                 }`}
                 onClick={() => setMapTab("check-in")}
               >
@@ -253,76 +313,65 @@ const AttendanceSummary = () => {
               </a>
               <a
                 className={`tab tab-lifted ${
-                  mapTab === "check-out" ? "tab-active" : ""
+                  mapTab === "check-out"
+                    ? "tab-active border-b-2 border-blue-500"
+                    : ""
                 }`}
                 onClick={() => setMapTab("check-out")}
               >
                 Pulang
               </a>
             </div>
+
             <div className="w-full h-80">
-              <MapContainer center={[0, 0]} zoom={13} className="h-full w-full">
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                <MapViewUpdater
-                  position={
+              {mapTab === "check-out" &&
+              (!selectedRecord?.latitudePulang ||
+                !selectedRecord?.longitudePulang) ? (
+                <p className="text-red-500 font-bold text-center mt-8">
+                  Anda belum absen pulang, peta tidak dapat ditampilkan.
+                </p>
+              ) : (
+                <iframe
+                  src={
                     mapTab === "check-in"
-                      ? [
-                          selectedRecord?.latitudeMasuk || 0,
-                          selectedRecord?.longitudeMasuk || 0
-                        ]
-                      : [
-                          selectedRecord?.latitudePulang || 0,
-                          selectedRecord?.longitudePulang || 0
-                        ]
+                      ? `https://www.google.com/maps?q=${selectedRecord?.latitudeMasuk},${selectedRecord?.longitudeMasuk}&output=embed`
+                      : `https://www.google.com/maps?q=${selectedRecord?.latitudePulang},${selectedRecord?.longitudePulang}&output=embed`
                   }
-                />
-                {mapTab === "check-in" &&
-                  selectedRecord?.latitudeMasuk &&
-                  selectedRecord?.longitudeMasuk && (
-                    <Marker
-                      position={[
-                        selectedRecord.latitudeMasuk,
-                        selectedRecord.longitudeMasuk
-                      ]}
-                    >
-                      <Popup>Check-in: {selectedRecord.arrivalTime}</Popup>
-                    </Marker>
-                  )}
-                {mapTab === "check-out" &&
-                  selectedRecord?.latitudePulang &&
-                  selectedRecord?.longitudePulang && (
-                    <Marker
-                      position={[
-                        selectedRecord.latitudePulang,
-                        selectedRecord.longitudePulang
-                      ]}
-                    >
-                      <Popup>Check-out: {selectedRecord.departureTime}</Popup>
-                    </Marker>
-                  )}
-              </MapContainer>
+                  width="100%"
+                  height="100%"
+                  frameBorder="0"
+                  style={{ border: 0 }}
+                  allowFullScreen=""
+                  aria-hidden="false"
+                  tabIndex="0"
+                ></iframe>
+              )}
             </div>
           </div>
         </dialog>
       </div>
 
       {/* Pagination Controls */}
-      <div className="flex justify-between mt-4">
+      <div className="flex justify-center mt-4">
         <button
-          className="btn btn-primary btn-sm"
+          className="btn btn-primary btn-sm mr-2"
           disabled={currentPage === 1}
-          onClick={() => handlePageChange(paginationLinks.prev)}
+          onClick={() => handlePageChange(currentPage - 1)}
         >
           Previous
         </button>
+        <span className="text-gray-700 dark:text-gray-300">
+          Page {currentPage} of {totalPages}
+        </span>
         <button
-          className="btn btn-primary btn-sm"
+          className="btn btn-primary btn-sm ml-2"
           disabled={currentPage === totalPages}
-          onClick={() => handlePageChange(paginationLinks.next)}
+          onClick={() => handlePageChange(currentPage + 1)}
         >
           Next
         </button>
       </div>
+
 
       <ToastContainer />
     </div>
