@@ -44,7 +44,9 @@ const LeadDetailsModal = ({ lead, show, onClose }) => {
         
         <div className="text-center mb-8">
           <img
-            src={lead.image}
+             src={ lead.image && lead.image !== "https://api.jurnal.pplgsmkn1ciomas.my.id/storage" 
+              ? lead.image 
+              : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" }
             alt="Profile"
             className="w-36 h-36 mx-auto rounded-full border-4 border-blue-500 shadow-lg"
           />
@@ -58,28 +60,28 @@ const LeadDetailsModal = ({ lead, show, onClose }) => {
           <table className="w-full">
             <tbody className="text-sm font-medium text-gray-700 dark:text-gray-300">
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">Nama</td>
-                <td className="py-3 px-4">{lead.name}</td>
+                <td className="py-3 px-4 font-medium w-1/3">Nama</td>
+                <td className="py-3 px-4 w-2/3">{lead.name}</td>
               </tr>
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">NIS</td>
-                <td className="py-3 px-4">{lead.nis}</td>
+                <td className="py-3 px-4 font-medium w-1/3">NIS</td>
+                <td className="py-3 px-4 w-2/3">{lead.nis}</td>
               </tr>
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">Kelas</td>
-                <td className="py-3 px-4">{lead.classes ? lead.classes.name : 'No Classroom'}</td>
+                <td className="py-3 px-4 font-medium w-1/3">Kelas</td>
+                <td className="py-3 px-4 w-2/3">{lead.classes ? lead.classes.name : 'No Classroom'}</td>
               </tr>
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">Tempat Lahir</td>
-                <td className="py-3 px-4">{lead.dateOfBirth}</td>
+                <td className="py-3 px-4 font-medium w-1/3">Tempat Lahir</td>
+                <td className="py-3 px-4 w-2/3">{lead.placeOfBirth}</td>
               </tr>
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">Tanggal Lahir</td>
-                <td className="py-3 px-4">{lead.placeOfBirth}</td>
+                <td className="py-3 px-4 font-medium w-1/3">Tanggal Lahir</td>
+                <td className="py-3 px-4 w-2/3">{lead.dateOfBirth}</td>
               </tr>
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">Gender</td>
-                <td className="py-3 px-4">{lead.gender}</td>
+                <td className="py-3 px-4 font-medium w-1/3">Gender</td>
+                <td className="py-3 px-4 w-2/3">{lead.gender}</td>
               </tr>
             </tbody>
           </table>
@@ -91,24 +93,24 @@ const LeadDetailsModal = ({ lead, show, onClose }) => {
           <table className="w-full">
             <tbody className="text-sm font-medium text-gray-700 dark:text-gray-300">
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">Nama Orang Tua</td>
-                <td className="py-3 px-4">{lead.parents ? lead.parents.nama : 'No Industry'}</td>
+                <td className="py-3 px-4 font-medium w-1/3">Nama Orang Tua</td>
+                <td className="py-3 px-4 w-2/3">{lead.parents ? lead.parents.nama : 'No Industry'}</td>
               </tr>
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">Jenis Kelamin </td>
-                <td className="py-3 px-4">{lead.parents ? lead.parents.gender : 'No Industry'}</td>
+                <td className="py-3 px-4 font-medium w-1/3">Jenis Kelamin</td>
+                <td className="py-3 px-4 w-2/3">{lead.parents ? lead.parents.gender : 'No Industry'}</td>
               </tr>
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">Alamar Orang Tua</td>
-                <td className="py-3 px-4">{lead.parents ? lead.parents.alamat : 'No Address'}</td>
+                <td className="py-3 px-4 font-medium w-1/3">Alamat Orang Tua</td>
+                <td className="py-3 px-4 w-2/3">{lead.parents ? lead.parents.alamat : 'No Address'}</td>
               </tr>
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">Pekerjaan Orang Tua</td>
-                <td className="py-3 px-4">{lead.parents ? lead.parents.occupation : 'No Mentor'}</td>
+                <td className="py-3 px-4 font-medium w-1/3">Pekerjaan Orang Tua</td>
+                <td className="py-3 px-4 w-2/3">{lead.parents ? lead.parents.occupation : 'No Mentor'}</td>
               </tr>
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">No Telepon Orang Tua</td>
-                <td className="py-3 px-4">{lead.parents ? lead.parents.phoneNumber : 'No Phone'}</td>
+                <td className="py-3 px-4 font-medium w-1/3">No Telepon Orang Tua</td>
+                <td className="py-3 px-4 w-2/3">{lead.parents ? lead.parents.phoneNumber : 'No Phone'}</td>
               </tr>
             </tbody>
           </table>
@@ -120,24 +122,24 @@ const LeadDetailsModal = ({ lead, show, onClose }) => {
           <table className="w-full">
             <tbody className="text-sm font-medium text-gray-700 dark:text-gray-300">
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">Nama Tempat PKL</td>
-                <td className="py-3 px-4">{lead.industries ? lead.industries.name : 'No Industry'}</td>
+                <td className="py-3 px-4 font-medium w-1/3">Nama Tempat PKL</td>
+                <td className="py-3 px-4 w-2/3">{lead.industries ? lead.industries.name : 'No Industry'}</td>
               </tr>
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">Bidang</td>
-                <td className="py-3 px-4">{lead.industries ? lead.industries.bidang : 'No Industry'}</td>
+                <td className="py-3 px-4 font-medium w-1/3">Bidang</td>
+                <td className="py-3 px-4 w-2/3">{lead.industries ? lead.industries.bidang : 'No Industry'}</td>
               </tr>
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">Alamat Tempat PKL</td>
-                <td className="py-3 px-4">{lead.industries ? lead.industries.alamat : 'No Address'}</td>
+                <td className="py-3 px-4 font-medium w-1/3">Alamat Tempat PKL</td>
+                <td className="py-3 px-4 w-2/3">{lead.industries ? lead.industries.alamat : 'No Address'}</td>
               </tr>
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">Nama Pembimbing</td>
-                <td className="py-3 px-4">{lead.industries ? lead.industries.industryMentorName : 'No Mentor'}</td>
+                <td className="py-3 px-4 font-medium w-1/3">Nama Pembimbing</td>
+                <td className="py-3 px-4 w-2/3">{lead.industries ? lead.industries.industryMentorName : 'No Mentor'}</td>
               </tr>
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">No Telepon Pembimbing</td>
-                <td className="py-3 px-4">{lead.industries ? lead.industries.industryMentorNo : 'No Phone'}</td>
+                <td className="py-3 px-4 font-medium w-1/3">No Telepon Pembimbing</td>
+                <td className="py-3 px-4 w-2/3">{lead.industries ? lead.industries.industryMentorNo : 'No Phone'}</td>
               </tr>
             </tbody>
           </table>
@@ -149,12 +151,12 @@ const LeadDetailsModal = ({ lead, show, onClose }) => {
           <table className="w-full">
             <tbody className="text-sm font-medium text-gray-700 dark:text-gray-300">
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">Nama</td>
-                <td className="py-3 px-4">{lead.teachers ? lead.teachers.name : 'No Teacher'}</td>
+                <td className="py-3 px-4 font-medium w-1/3">Nama</td>
+                <td className="py-3 px-4 w-2/3">{lead.teachers ? lead.teachers.name : 'No Teacher'}</td>
               </tr>
               <tr className="border-b dark:border-gray-600">
-                <td className="py-3 px-4 font-medium">No. Telepon</td>
-                <td className="py-3 px-4">{lead.teachers ? lead.teachers.no_hp : 'No Phone'}</td>
+                <td className="py-3 px-4 font-medium w-1/3">No. Telepon</td>
+                <td className="py-3 px-4 w-2/3">{lead.teachers ? lead.teachers.no_hp : 'No Phone'}</td>
               </tr>
             </tbody>
           </table>
@@ -163,7 +165,7 @@ const LeadDetailsModal = ({ lead, show, onClose }) => {
         {/* Close Button */}
         <div className="modal-action flex justify-center mt-8">
           <button
-            className="btn btn-xl    bg-blue-500 hover:bg-blue-600 text-white w-full sm:w-auto px-10 py-2 rounded-lg shadow-lg transition duration-300"
+            className="btn btn-xl bg-blue-500 hover:bg-blue-600 text-white w-full sm:w-auto px-10 py-2 rounded-lg shadow-lg transition duration-300"
             onClick={handleClose}
           >
             Close

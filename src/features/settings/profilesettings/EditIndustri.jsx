@@ -152,80 +152,80 @@ const EditLeadPage = () => {
 
     return (
         <div className="container mx-auto my-10 px-4">
-            <div className="bg-white shadow-lg rounded-lg p-6 border-t-4 border-blue-500">
-                <h1 className="text-3xl font-bold text-center mb-4">Edit Data Industri</h1>
-                <p className="text-center border-b pb-4 mb-4">Silakan edit form di bawah!</p>
+            <div className="bg-white dark:bg-[#1c2229] shadow-lg rounded-lg p-6 border-t-4 border-blue-500 dark:border-blue-400">
+                <h1 className="text-3xl font-bold text-center mb-4 text-black-800 dark:text-white">Edit Data Industri</h1>
+                <p className="text-center border-b pb-4 mb-4 text-black-800 dark:text-white">Silakan edit form di bawah!</p>
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Username</label>
+                        <label className="block text-gray-700 dark:text-white font-bold mb-2">Username</label>
                         <input
                             type="text"
                             name="username"
                             value={username}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-400"
                             required
                         />
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Nama Industri</label>
+                        <label className="block text-gray-700 dark:text-white font-bold mb-2">Nama Industri</label>
                         <input
                             type="text"
                             name="name"
                             value={name}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-400"
                             required
                         />
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Bidang</label>
+                        <label className="block text-gray-700 dark:text-white font-bold mb-2">Bidang</label>
                         <input
                             type="text"
                             name="bidang"
                             value={bidang}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-400"
                             required
                         />
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Alamat</label>
+                        <label className="block text-gray-700 dark:text-white font-bold mb-2">Alamat</label>
                         <input
                             type="text"
                             name="alamat"
                             value={alamat}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-400"
                             required
                         />
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Longitude</label>
+                        <label className="block text-gray-700 dark:text-white font-bold mb-2">Longitude</label>
                         <input
                             type="text"
                             name="longitude"
                             value={longitude}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-400"
                             required
                             readOnly
                         />
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Latitude</label>
+                        <label className="block text-gray-700 dark:text-white font-bold mb-2">Latitude</label>
                         <input
                             type="text"
                             name="latitude"
                             value={latitude}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-400"
                             required
                             readOnly
                         />
@@ -243,44 +243,44 @@ const EditLeadPage = () => {
 
                     <button
                         type="button"
-                        className="w-full px-4 py-2 text-white bg-green-500 hover:bg-green-700 rounded-lg mb-4"
+                        className="w-full px-4 py-2 text-white dark:text-black-800 bg-green-500 dark:bg-green-400 hover:bg-green-700 dark:hover:bg-green-500 rounded-lg mb-4"
                         onClick={handleSetCurrentLocation}
                     >
                         Tambah lokasi dengan posisi anda saat ini
                     </button>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Pembimbing</label>
+                        <label className="block text-gray-700 dark:text-white font-bold mb-2">Pembimbing</label>
                         <input
                             type="text"
                             name="industryMentorName"
                             value={industryMentorName}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-400"
                             required
                         />
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">No. Pembimbing</label>
+                        <label className="block text-gray-700 dark:text-white font-bold mb-2">No. Pembimbing</label>
                         <input
                             type="text"
                             name="industryMentorNo"
                             value={industryMentorNo}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-400"
                             required
                         />
                     </div>
 
                     <div className="mb-4" hidden>
-                        <label className="block text-gray-700 font-bold mb-2">Roles</label>
+                        <label className="block text-gray-700 dark:text-white font-bold mb-2">Roles</label>
                         <input
                             type="text"
                             name="roles"
                             value={roles}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-400"
                             required
                         />
                     </div>
@@ -288,14 +288,14 @@ const EditLeadPage = () => {
                     <div className="flex justify-between gap-2">
                         <button
                             type="submit"
-                            className="w-full px-4 py-2 text-white bg-blue-500 hover:bg-blue-700 rounded-lg"
+                            className="w-full px-4 py-2 text-white dark:text-black-800 bg-blue-500 dark:bg-blue-400 hover:bg-blue-700 dark:hover:bg-blue-500 rounded-lg"
                         >
                             Save
                         </button>
                         <button
                             type="button"
-                            className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg"
-                            onClick={() => navigate('/app/data/users')}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white rounded-lg"
+                            onClick={() => navigate('/app/settings-profile')}
                         >
                             Cancel
                         </button>

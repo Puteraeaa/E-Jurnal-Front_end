@@ -122,10 +122,26 @@ const AddStudentPage = () => {
   useEffect(() => {
     const fetchParents = async () => {
       try {
-        const response = await Api.get("admin/parent", {
-          headers: { Authorization: `Bearer ${Cookies.get("token")}` }
-        });
-        setParents(response.data.data.data || []);
+        let allParents = [];
+        let currentPage = 1;
+        let totalPages = 1;
+  
+        // Loop through all pages
+        while (currentPage <= totalPages) {
+          const response = await Api.get(`admin/parent?page=${currentPage}`, {
+            headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+          });
+  
+          const data = response.data;
+          allParents = [...allParents, ...data.data]; // Append current page data
+  
+          totalPages = data.last_page; // Set total pages from API response
+          currentPage++; // Move to next page
+        }
+  
+        setParents(allParents); // Set the complete parents data
+        console.log(allParents); // Optional: Log to see data
+  
       } catch (error) {
         console.error("Error fetching parents data:", error);
       }
@@ -133,10 +149,26 @@ const AddStudentPage = () => {
 
     const fetchIndustries = async () => {
       try {
-        const response = await Api.get("admin/industri", {
-          headers: { Authorization: `Bearer ${Cookies.get("token")}` }
-        });
-        setIndustries(response.data.data.data || []);
+        let allIndustries = [];
+        let currentPage = 1;
+        let totalPages = 1;
+  
+        // Loop through all pages
+        while (currentPage <= totalPages) {
+          const response = await Api.get(`admin/industri?page=${currentPage}`, {
+            headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+          });
+  
+          const data = response.data.data;
+          allIndustries = [...allIndustries, ...data.data]; // Append current page data
+  
+          totalPages = data.last_page; // Set total pages
+          currentPage++; // Move to next page
+        }
+  
+        setIndustries(allIndustries); // Set the complete industries data
+        console.log(allIndustries); // Optional: Log to see data
+  
       } catch (error) {
         console.error("Error fetching industries data:", error);
       }
@@ -166,10 +198,26 @@ const AddStudentPage = () => {
 
     const fetchTeachers = async () => {
       try {
-        const response = await Api.get("admin/teacher", {
-          headers: { Authorization: `Bearer ${Cookies.get("token")}` }
-        });
-        setTeachers(response.data.data.data || []);
+        let allTeachers = [];
+        let currentPage = 1;
+        let totalPages = 1;
+  
+        // Loop through all pages
+        while (currentPage <= totalPages) {
+          const response = await Api.get(`admin/teacher?page=${currentPage}`, {
+            headers: { Authorization: `Bearer ${Cookies.get("token")}` }
+          });
+  
+          const data = response.data.data;
+          allTeachers = [...allTeachers, ...data.data]; // Append current page data
+  
+          totalPages = data.last_page; // Set total pages from API response
+          currentPage++; // Move to next page
+        }
+  
+        setTeachers(allTeachers); // Set the complete teachers data
+        console.log(allTeachers); // Optional: Log to see data
+  
       } catch (error) {
         console.error("Error fetching teachers data:", error);
       }

@@ -6,9 +6,10 @@ import Api from "../../api";
 import Cookies from "js-cookie";
 import swal from "sweetalert2";
 import toast from "react-hot-toast";
+import CryptoJS from "crypto-js";
 
 export default function EditUser() {
-  const { id } = useParams(); // Get the report ID from URL parameters
+  const { id } = useParams(); 
   const navigate = useNavigate();
   const [deskripsi, setDeskripsi] = useState("");
   const [tanggal, setTanggal] = useState(""); // Initialize date state
@@ -19,6 +20,43 @@ export default function EditUser() {
   const [image, setImage] = useState(null);
   const [errors, setErrors] = useState({});
   const token = Cookies.get("token");
+  const [isLoading, setIsLoading] = useState(false);
+
+   const decryptId = (encryptedId) => {
+      const secretKey = process.env.REACT_APP_SECRET_KEY;
+      const decoded = decodeURIComponent(encryptedId); 
+      const bytes = CryptoJS.AES.decrypt(decoded, secretKey);
+      return bytes.toString(CryptoJS.enc.Utf8);
+  };
+
+
+        const encryptId = () => {
+          const secretKey = process.env.REACT_APP_SECRET_KEY;
+          const encrypted = CryptoJS.AES.encrypt(decryptedId.toString(), secretKey).toString();
+      
+          return encodeURIComponent(encrypted); // Encode hasil enkripsi agar valid di URL
+        };
+
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ['bold', 'italic'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      [{ font: [] }],
+      ['link', 'image', 'video'],
+     
+    ]
+  };
+
+  const formats = [
+    'header',
+    'bold', 'italic',
+    'list', 'bullet',
+    'link', 'image', 'video',
+    'font'
+  ];
+  
+  const decryptedId = decryptId(id);
 
   useEffect(() => {
     // Set the default date to today's date
@@ -26,8 +64,9 @@ export default function EditUser() {
     setTanggal(today);
 
     const fetchReport = async () => {
+      setIsLoading(true);
       try {
-        const response = await Api.get(`admin/jurnal/${id}`, {
+        const response = await Api.get(`admin/jurnal/${decryptedId}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -39,7 +78,12 @@ export default function EditUser() {
         setStartTime(report.start_time || "");
         setEndTime(report.end_time || "");
         setTools(report.tools || "");
-      } catch (error) {}
+      } catch (error) {
+
+        
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchReport();
@@ -63,6 +107,7 @@ export default function EditUser() {
       setErrors(newErrors);
       return;
     }
+    setIsLoading(true);
 
     try {
       const result = await swal.fire({
@@ -87,139 +132,159 @@ export default function EditUser() {
         for (let [key, value] of formData.entries()) {
         }
 
-        await Api.patch(`admin/jurnal/${id}`, formData, {
+        await Api.patch(`admin/jurnal/${decryptedId}`, formData, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
 
-        toast.success("Program updated successfully!", {
+        toast.success("Jurnal Berhasil DI update", {
           position: "top-right",
           duration: 4000
         });
 
-        navigate(`/app/detail-laporan/${id}`);
+        navigate(`/app/detail-laporan/${encryptId()}`);
       }
     } catch (error) {
       toast.error("Failed to update program. Please try again later.", {
         position: "top-right",
         duration: 4000
-      });
+      }
+    )
+    ;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto my-10">
-      <div className="flex flex-col">
-        <div className="dark:bg-gray-800 bg-white shadow-lg rounded-lg p-6 border-t-4 border-blue-500">
-          <h1 className="text-3xl font-bold text-center mb-4">
-            Edit Laporan Kegiatan PKL
-          </h1>
-          <p className="text-center border-b pb-4 mb-4">
-            Silakan perbarui form di bawah!
-          </p>
-
-          <form onSubmit={updateUser}>
-            <div className="mb-4">
-              <label className="block text-gray-700 font-bold mb-2">
-                Deskripsi Laporan
-              </label>
-              <ReactQuill
-                value={deskripsi}
-                onChange={setDeskripsi}
-                className="bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                theme="snow"
-                placeholder="Describe your activity..."
-              />
-              {errors.deskripsi && (
-                <div className="text-red-600 mt-2">{errors.deskripsi[0]}</div>
-              )}
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 font-bold mb-2">
-                Image (optional)
-              </label>
-              <input
-                type="file"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                onChange={(e) => setImage(e.target.files[0])}
-              />
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 font-bold mb-2">
-                Tools Used
-              </label>
-              <input
-                type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                value={tools}
-                onChange={(e) => setTools(e.target.value)}
-                placeholder="Enter tools used"
-              />
-              {errors.tools && (
-                <div className="text-red-600 mt-2">{errors.tools[0]}</div>
-              )}
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 font-bold mb-2">
-                Tanggal Laporan
-              </label>
-              <input
-                type="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                value={tanggal}
-                onChange={(e) => setTanggal(e.target.value)}
-              />
-              {errors.tanggal && (
-                <div className="text-red-600 mt-2">{errors.tanggal[0]}</div>
-              )}
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 font-bold mb-2">
-                Start Time
-              </label>
-              <input
-                type="time"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-              />
-              {errors.start_time && (
-                <div className="text-red-600 mt-2">{errors.start_time[0]}</div>
-              )}
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 font-bold mb-2">
-                End Time
-              </label>
-              <input
-                type="time"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-              />
-              {errors.end_time && (
-                <div className="text-red-600 mt-2">{errors.end_time[0]}</div>
-              )}
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                className="w-full px-4 py-2 text-white bg-blue-500 hover:bg-blue-700 rounded-lg"
-              >
-                <i className="fa fa-save mr-2"></i> Save
-              </button>
-            </div>
-          </form>
+  <div className="max-w-3xl  mx-auto p-6">
+        <div className="card bg-base-100 shadow-xl border-t-4 border-primary">
+          <div className="card-body">
+            <h2 className="card-title text-primary text-2xl">
+              Tambah Laporan Kegiatan PKL
+            </h2>
+            <p className="text-sm text-gray-500">
+              Silakan isi form kegiatan kamu hari ini
+            </p>
+  
+            <form onSubmit={updateUser} className="space-y-6 mt-4">
+  
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text font-bold">Deskripsi Kegiatan</span>
+        </label>
+        <div className="rounded-lg border border-base-300 min-h-[150px]">
+          <ReactQuill
+            value={deskripsi}
+            onChange={setDeskripsi}
+            theme="snow"
+            placeholder="Minimal 150 karakter..."
+            className="min-h-[150px]"
+            modules={modules}
+            formats={formats}
+          />
         </div>
+       
+        {errors.deskripsi && (
+          <p className="text-error text-sm mt-1">{errors.deskripsi[0]}</p>
+        )}
+      </div>
+  
+      {/* GAMBAR */}
+    <div className="form-control">
+      <label className="label">
+        <span className="label-text font-bold">Gambar (opsional)</span>
+      </label>
+      <input
+        type="file"
+        className="file-input file-input-bordered w-full"
+        onChange={(e) => setImage(e.target.files[0])}
+      />
+    </div>
+  
+    {/* TOOLS */}
+    <div className="form-control">
+      <label className="label">
+        <span className="label-text font-bold">Alat yang Digunakan</span>
+      </label>
+      <input
+        type="text"
+        className="input input-bordered w-full"
+        value={tools}
+        onChange={(e) => setTools(e.target.value)}
+        placeholder="Contoh: Laptop, Visual Studio Code"
+      />
+      {errors.tools && (
+        <p className="text-error text-sm mt-1">{errors.tools[0]}</p>
+      )}
+    </div>
+  
+    {/* TANGGAL & WAKTU */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text font-bold">Tanggal</span>
+        </label>
+        <input
+          type="date"
+          className="input input-bordered w-full"
+          value={tanggal}
+          onChange={(e) => setTanggal(e.target.value)}
+        />
+        {errors.tanggal && (
+          <p className="text-error text-sm mt-1">{errors.tanggal[0]}</p>
+        )}
+      </div>
+  
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text font-bold">Waktu Mulai</span>
+        </label>
+        <input
+          type="time"
+          className="input input-bordered w-full"
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+        />
+        {errors.start_time && (
+          <p className="text-error text-sm mt-1">{errors.start_time[0]}</p>
+        )}
+      </div>
+  
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text font-bold">Waktu Selesai</span>
+        </label>
+        <input
+          type="time"
+          className="input input-bordered w-full"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+        />
+        {errors.end_time && (
+          <p className="text-error text-sm mt-1">{errors.end_time[0]}</p>
+        )}
       </div>
     </div>
+  
+    {/* BUTTON */}
+    <div className="form-control mt-6">
+      <button
+        type="submit"
+        className={`btn btn-primary btn-block ${
+          isLoading ? "loading btn-disabled" : ""
+        }`}
+        disabled={isLoading}
+      >
+        {isLoading ? "Menyimpan..." : "Simpan Laporan"}
+      </button>
+    </div>
+  </form>
+  
+          </div>
+        </div>
+      </div>
   );
 }
 

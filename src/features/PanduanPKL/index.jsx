@@ -87,7 +87,7 @@ const InfoPanduanPKL = () => {
   };
 
   return (
-    <div className="relative h-screen flex flex-col bg-gray-100">
+    <div className="relative h-screen flex flex-col bg-gray-100 dark:bg-gray-800">
       {/* Tambahkan ToastContainer di luar komponen dinamis */}
       <ToastContainer />
 

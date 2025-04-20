@@ -1,35 +1,14 @@
+import React, { useState, useEffect } from "react";
+import ApexCharts from "apexcharts";
+import TitleCard from "../../../components/Cards/TitleCard";
 import Cookies from "js-cookie";
 import Api from "../../../api";
-import React, { useState, useEffect } from "react";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-  Legend
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
-import TitleCard from '../../../components/Cards/TitleCard';
-
-// Register the necessary Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 function LineChart() {
   const token = Cookies.get("token");
   const [dashboard, setDashboard] = useState([]);
-  const [chartData, setChartData] = useState({});
-  const [filterBy, setFilterBy] = useState('month'); // 'day' or 'month'
+  const [chartOptions, setChartOptions] = useState({});
+  const [filterBy, setFilterBy] = useState("month"); // 'day' or 'month'
   const [selectedMonth, setSelectedMonth] = useState(""); // Month selected when filterBy is 'day'
   const [loading, setLoading] = useState(true);
   const [availableMonths, setAvailableMonths] = useState([]);
@@ -61,13 +40,21 @@ function LineChart() {
     }
   }, [filterBy, selectedMonth]);
 
+  useEffect(() => {
+    if (Object.keys(chartOptions).length > 0) {
+      const chart = new ApexCharts(document.querySelector("#chart"), chartOptions);
+      chart.render();
+      return () => chart.destroy(); // Clean up previous chart instance
+    }
+  }, [chartOptions]);
+
   const processChartData = (activityBreakdown) => {
     const monthData = {};
     const dailyData = {};
 
-    activityBreakdown.forEach(item => {
+    activityBreakdown.forEach((item) => {
       const date = new Date(item.period);
-      const month = date.toLocaleString('default', { month: 'long' });
+      const month = date.toLocaleString("default", { month: "long" });
       const day = date.getDate();
 
       if (!monthData[month]) {
@@ -86,42 +73,80 @@ function LineChart() {
 
     setAvailableMonths(Object.keys(monthData));
 
-    if (filterBy === 'month') {
+    if (filterBy === "month") {
       const labels = Object.keys(monthData);
       const data = Object.values(monthData);
-      setChartData({
-        labels,
-        datasets: [
+      setChartOptions({
+        chart: {
+          height: 350,
+          type: "line",
+          zoom: {
+            enabled: true,
+          },
+        },
+        dataLabels: {
+          enabled: true,
+        },
+        stroke: {
+          curve: "straight",
+        },
+        series: [
           {
-            label: 'Data Jurnal berdasarkan bulan',
-            data,
-            borderColor: 'rgba(53, 162, 235, 1)',
-            backgroundColor: 'rgba(53, 162, 235, 0.2)',
-            fill: true,
+            name: "Data Jurnal berdasarkan bulan",
+            data: data,
           },
         ],
+        xaxis: {
+          categories: labels,
+        },
+        yaxis: {
+          labels: {
+            formatter: function (value) {
+              return value + " Jurnal";
+            },
+          },
+        },
       });
-    } else if (filterBy === 'day' && selectedMonth) {
+    } else if (filterBy === "day" && selectedMonth) {
       const labels = Object.keys(dailyData[selectedMonth] || {});
-      const data = labels.map(day => dailyData[selectedMonth][day] || 0);
-      setChartData({
-        labels,
-        datasets: [
+      const data = labels.map((day) => dailyData[selectedMonth][day] || 0);
+      setChartOptions({
+        chart: {
+          height: 350,
+          type: "line",
+          zoom: {
+            enabled: true,
+          },
+        },
+        dataLabels: {
+          enabled: true,
+        },
+        stroke: {
+          curve: "straight",
+        },
+        series: [
           {
-            label: `Data Jurnal per hari (${selectedMonth})`,
-            data,
-            borderColor: 'rgba(53, 162, 235, 1)',
-            backgroundColor: 'rgba(53, 162, 235, 0.2)',
-            fill: true,
+            name: `Data Jurnal per hari (${selectedMonth})`,
+            data: data,
           },
         ],
+        xaxis: {
+          categories: labels,
+        },
+        yaxis: {
+          labels: {
+            formatter: function (value) {
+              return value + " Jurnal";
+            },
+          },
+        },
       });
     }
   };
 
   const handleFilterChange = (e) => {
     setFilterBy(e.target.value);
-    if (e.target.value === 'day') {
+    if (e.target.value === "day") {
       setSelectedMonth(""); // Reset selectedMonth if changing to 'day'
     }
   };
@@ -130,29 +155,20 @@ function LineChart() {
     setSelectedMonth(e.target.value);
   };
 
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      }
-    },
-  };
-
   return (
-    <TitleCard 
+    <TitleCard
       title="Statistik Data Jurnal Siswa"
       TopSideButtons={
         <div className="relative inline-block">
           <select
             value={filterBy}
             onChange={handleFilterChange}
-            className="appearance-none w-32 h-10 text-sm p-2 pl-4 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
+            className="appearance-none w-32 h-10 text-sm p-2  pl-4 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700"
           >
             <option value="day">Hari</option>
             <option value="month">Bulan</option>
           </select>
-          {filterBy === 'day' && (
+          {filterBy === "day" && (
             <select
               value={selectedMonth}
               onChange={handleMonthChange}
@@ -170,17 +186,11 @@ function LineChart() {
       }
     >
       {loading ? (
-        <div className="text-center">
-          <p>Loading data...</p>
+        <div className="w-full h-96 flex justify-center">
+         <span className="loading loading-spinner text-info loading-lg"></span>
         </div>
       ) : (
-        <div>
-          {filterBy === 'day' && !selectedMonth ? (
-            <p className="text-center text-gray-500">Silahkan pilih bulan</p>
-          ) : (
-            chartData.labels && <Line options={options} data={chartData} />
-          )}
-        </div>
+        <div id="chart" className="w-full h-96"></div>
       )}
     </TitleCard>
   );

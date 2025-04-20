@@ -24,8 +24,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-
-          {/* Redirect dari /dashboard ke /app/dashboard */}
+          
           <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
 
           {/* Rute untuk bagian yang terlindungi */}

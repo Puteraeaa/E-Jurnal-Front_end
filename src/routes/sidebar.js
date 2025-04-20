@@ -1,30 +1,27 @@
 import React from 'react';
-import BellIcon from '@heroicons/react/24/outline/BellIcon';
-import DocumentTextIcon from '@heroicons/react/24/outline/DocumentTextIcon';
-import Squares2X2Icon from '@heroicons/react/24/outline/Squares2X2Icon';
-import TableCellsIcon from '@heroicons/react/24/outline/TableCellsIcon';
-import WalletIcon from '@heroicons/react/24/outline/WalletIcon';
-import CodeBracketSquareIcon from '@heroicons/react/24/outline/CodeBracketSquareIcon';
-import DocumentIcon from '@heroicons/react/24/outline/DocumentIcon';
-import ExclamationTriangleIcon from '@heroicons/react/24/outline/ExclamationTriangleIcon';
-import CalendarDaysIcon from '@heroicons/react/24/outline/CalendarDaysIcon';
-import ArrowRightOnRectangleIcon from '@heroicons/react/24/outline/ArrowRightOnRectangleIcon';
-import UserIcon from '@heroicons/react/24/outline/UserIcon';
-import Cog6ToothIcon from '@heroicons/react/24/outline/Cog6ToothIcon';
-import BoltIcon from '@heroicons/react/24/outline/BoltIcon';
-import ChartBarIcon from '@heroicons/react/24/outline/ChartBarIcon';
-import CurrencyDollarIcon from '@heroicons/react/24/outline/CurrencyDollarIcon';
-import InboxArrowDownIcon from '@heroicons/react/24/outline/InboxArrowDownIcon';
-import UsersIcon from '@heroicons/react/24/outline/UsersIcon';
-import KeyIcon from '@heroicons/react/24/outline/KeyIcon';
-import DocumentDuplicateIcon from '@heroicons/react/24/outline/DocumentDuplicateIcon';
+import {
+  Squares2X2Icon,
+  TableCellsIcon,
+  UserIcon,
+  CalendarDaysIcon,
+  InboxArrowDownIcon,
+  DocumentDuplicateIcon,
+  RectangleStackIcon,
+  ChatBubbleLeftIcon,
+  CursorArrowRippleIcon,
+  ArchiveBoxIcon
+} from '@heroicons/react/24/outline';
+
 
 import hasAnyPermission from '../utils/Permissions';
 
 const iconClasses = `h-6 w-6`;
 const submenuIconClasses = `h-5 w-5`;
 
-const routes = [
+
+
+const routes = (archivedData = []) => {
+  return [
   {
     path: 'dashboard',
     icon: <Squares2X2Icon className={iconClasses} />, 
@@ -74,6 +71,13 @@ const routes = [
     name: 'Data Kelas', // name that appear in Sidebar
   },
   ] : []),
+  ...(hasAnyPermission(['guru.index', 'orang-tua.index','users.create','murid.index']) ? [
+  {
+    path: '/app/forum', //url
+    icon: <ChatBubbleLeftIcon className={submenuIconClasses} />,
+    name: 'Forum PKL', // name that appear in Sidebar
+  },
+  ] : []),
   {
     path: '/app/integration', // url
     icon: <i className="fa-solid fa-circle-info text-gray-500 text-xl"></i>, // icon component
@@ -89,6 +93,12 @@ const routes = [
   
 ] : []),
 
+{
+  path: '/app/bimbingan/form', //url
+  icon: <RectangleStackIcon className={submenuIconClasses} />,
+  name: 'Bimbingan', // name that appear in Sidebar
+},
+
 ...(hasAnyPermission(['guru.index', 'orang-tua.index', 'tempat.index', 'users.create']) ? [
   {
     path: '/app/rekap-absensi',
@@ -101,6 +111,12 @@ const routes = [
     icon: <CalendarDaysIcon className={iconClasses} />, // icon component
     name: 'Calendar', // name that appear in Sidebar
   },
+  {
+    path: '/app/cms', // url
+    icon: <CursorArrowRippleIcon className={iconClasses} />, // icon component
+    name: 'CMS', 
+  },
+
 
   ] : []),
 ] : []),
@@ -121,6 +137,23 @@ const routes = [
     icon: <UserIcon className={submenuIconClasses} />,
     name: 'Profile', // name that appear in Sidebar
   },
+
+    ...(hasAnyPermission(['users.create', 'penilaian.create']) ? [
+      {
+        path: '',
+        icon: <ArchiveBoxIcon className={`${iconClasses} inline`} />,
+        name: 'Archived Students',
+        submenu: Array.isArray(archivedData)
+          ? archivedData.map((item) => ({
+              path: `/app/archived/${item.year}`,
+              icon: <CalendarDaysIcon className={submenuIconClasses} />,
+              name: item.year,
+            }))
+          : [],
+      },
+    ] : []),
+ 
+ 
   // {
   //   path: '', //no url needed as this has submenu
   //   icon: <DocumentDuplicateIcon className={`${iconClasses} inline`} />, // icon component
@@ -166,6 +199,8 @@ const routes = [
   // //     // },
   // //   ],
   // },
-];
+
+  
+]};
 
 export default routes;

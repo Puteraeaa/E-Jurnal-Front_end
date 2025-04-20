@@ -103,13 +103,13 @@ function Calendar() {
     }
 
     const result = await swal.fire({
-      title: "Absen",
+      title: "Schedule",
       text: "Apakah Anda yakin ingin menambahkan jadwal?",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Ya, absen!"
+      confirmButtonText: "Ya, Tambah!"
     });
 
     if (result.isConfirmed) {

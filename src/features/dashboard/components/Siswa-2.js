@@ -2,380 +2,154 @@ import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
 import Api from "../../../api";
 import { toast } from "react-hot-toast";
+import { Clock, FileText, CheckCircle, UserCheck } from "lucide-react"; // Ikon modern
 
 const Dashboard = () => {
   const user = JSON.parse(Cookies.get("user"));
   const userRole = user.roles;
   const token = Cookies.get("token");
+
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [jurnalRecords, setJurnalRecords] = useState([]);
   const [teacherDepartureRecords, setTeacherDepartureRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [time, setTime] = useState(new Date());
+
+  useEffect(() => {
+    fetchData();
+    getAttendanceRecords();
+    fetchEvents();
+
+    const interval = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchData = async () => {
-    const role = user.roles;
-
     try {
-      let response;
+      setLoading(true);
+      let endpoint =
+        userRole === "siswa"
+          ? `admin/student-jurnal`
+          : `admin/indexRole-jurnal`;
 
-      if (role === "siswa") {
-        response = await Api.get(`admin/student-jurnal`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-      } else if (
-        role === "guru" ||
-        role === "orang tua" ||
-        role === "industri"
-      ) {
-        response = await Api.get(`admin/indexRole-jurnal`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-      } else {
-        response = await Api.get(`admin/jurnal`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-      }
+      const response = await Api.get(endpoint, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       setJurnalRecords(response.data.data.data || []);
     } catch (error) {
-      toast.error("Failed to fetch jurnal records");
+      toast.error("Gagal memuat data jurnal");
+    } finally {
+      setLoading(false);
     }
   };
 
   const getAttendanceRecords = async () => {
-    const role = user.roles;
-
     try {
-      let endpoint = "";
-
-      if (role === "siswa") {
-        endpoint = `/admin/absenSiswaOnly`;
-      } else if (role === "guru" || role === "orang tua" || role === "industri") {
-        endpoint = `/admin/absenSiswa`;
-      } else {
-        endpoint = `/admin/absence`;
-      }
+      setLoading(true);
+      let endpoint =
+        userRole === "siswa"
+          ? `/admin/absenSiswaOnly`
+          : `/admin/absenSiswa`;
 
       const response = await Api.get(endpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       setAttendanceRecords(Object.keys(response.data.data) || []);
     } catch (error) {
-      toast.error("Failed to fetch attendance records");
+      toast.error("Gagal memuat data absensi");
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchEvents = async () => {
-    const role = user.roles;
     try {
-
-      let endpoint = "";
-
-      if (role === "siswa") {
-        endpoint = `/admin/getSchedulleStudent`;
-      } else {
-        endpoint = `/admin/jadwal`;
-      }
-
+      let endpoint =
+        userRole === "siswa"
+          ? `/admin/getSchedulleStudent`
+          : `/admin/jadwal`;
 
       const response = await Api.get(endpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        headers: { Authorization: `Bearer ${token}` },
       });
 
+      const today = new Date().toISOString().split("T")[0];
       const allData = response.data.data;
-   
 
-      const today = new Date().toISOString().split("T")[0]; // Format tanggal hari ini
-
-      // Jika allData adalah objek dengan tanggal sebagai kunci
-      if (typeof allData === "object" && !Array.isArray(allData)) {
-        const todayRecords = allData[today] || [];
-        setTeacherDepartureRecords(todayRecords);
-      } else {
-        console.error("Data tidak dalam format objek.");
-      }
+      setTeacherDepartureRecords(allData[today] || []);
     } catch (error) {
-      toast.error("Failed to fetch teacher departure records");
+      toast.error("Gagal memuat data aktivitas guru");
     }
   };
 
-  useEffect(() => {
-    fetchEvents();
-    fetchData();
-    getAttendanceRecords();
-  }, []);
-
-  const [time, setTime] = useState(new Date());
-
-  useEffect(() => {
-    const interval = setInterval(() => setTime(new Date()), 1000); // Update setiap detik
-    return () => clearInterval(interval); // Bersihkan interval saat komponen unmount
-  }, []);
-
-  const formattedTime = time.toLocaleTimeString("id-ID");
-  
-
   return (
-    <div className="dark:text-gray-100 flex flex-wrap gap-y-6 sm:gap-6 gap-2">
-      {userRole === "siswa" ? (
-        <div className="flex flex-wrap gap-y-6 sm:gap-6 gap-2">
-          {/* Komponen untuk siswa */}
-          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 w-full sm:w-[365px]">
-            <div className="flex items-center justify-between">
-              <div className="text-gray-600 dark:text-gray-300 text-sm font-medium">
-                Waktu Saat Ini
-              </div>
-              <svg
-                className="w-6 h-6 text-purple-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M5 3v18l15-9L5 3z"
-                />
-              </svg>
-            </div>
-            <div className="mt-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
-              {formattedTime} WIB
-            </div>
-            <div className="mt-2 text-gray-500 dark:text-gray-400 text-sm">
-              Jam yang menunjukkan waktu saat ini secara real-time.
-            </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 ">
+      {/* Card Waktu Saat Ini */}
+      <div className="card bg-base-100 shadow-md hover:shadow-lg transition">
+        <div className="card-body">
+          <div className="flex items-center gap-3">
+            <Clock className="text-purple-500" size={28} />
+            <h2 className="card-title">Waktu Saat Ini</h2>
           </div>
-
-          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 w-full sm:w-[365px]">
-            <div className="flex items-center justify-between">
-              <div className="text-gray-600 dark:text-gray-300 text-sm font-medium">
-                Jumlah Laporan PKL
-              </div>
-              <svg
-                className="w-6 h-6 text-blue-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 10h16m-7 4h7"
-                />
-              </svg>
-            </div>
-            <div className="mt-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
-              {jurnalRecords.length}
-            </div>
-            <div className="mt-2 text-gray-500 dark:text-gray-400 text-sm">
-              Jumlah total laporan PKL yang sudah dikirim oleh siswa.
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 w-full sm:w-[365px]">
-            <div className="flex items-center justify-between">
-              <div className="text-gray-600 dark:text-gray-300 text-sm font-medium">
-                Jumlah Absen yang telah dilakukan
-              </div>
-              <svg
-                className="w-6 h-6 text-green-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16m-7 4h7m-7 4h7"
-                />
-              </svg>
-            </div>
-            <div className="mt-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
-              {attendanceRecords.length}
-            </div>
-            <div className="mt-2 text-gray-500 dark:text-gray-400 text-sm">
-              Jumlah absensi yang telah dilakukan oleh Anda.
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 w-full sm:w-[365px]">
-            <div className="flex items-center justify-between">
-              <div className="text-gray-600 dark:text-gray-300 text-sm font-medium">
-                Aktifitas Guru
-              </div>
-              <svg
-                className="w-6 h-6 text-yellow-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v16a1 1 0 01-1 1H4a1 1 0 01-1-1V4z"
-                />
-              </svg>
-            </div>
-            <div className="mt-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
-              <p className="text-xl">
-                {teacherDepartureRecords.length > 0
-                  ? teacherDepartureRecords.map((record) => (
-                      <li key={record.id} className="list-none">
-                        {record.status} ke {record.industri_name}
-                      </li>
-                    ))
-                  : "Tidak ada aktifitas guru"}
-              </p>
-            </div>
-            <div className="mt-2 text-gray-500 dark:text-gray-400 text-sm">
-              Data keberangkatan guru
-            </div>
-          </div>
+          <p className="text-3xl font-bold">{time.toLocaleTimeString("id-ID")} WIB</p>
+          <p className="text-gray-500">Jam real-time</p>
         </div>
-      ) : userRole === "guru" ||
-        userRole === "industri" ||
-        userRole === "orang tua" ? (
-        <div className="flex flex-wrap gap-y-6 sm:gap-6 gap-2">
-          {/* Komponen untuk siswa */}
-          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 w-full sm:w-[365px]">
-            <div className="flex items-center justify-between">
-              <div className="text-gray-600 dark:text-gray-300 text-sm font-medium">
-                Waktu Saat Ini
-              </div>
-              <svg
-                className="w-6 h-6 text-purple-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M5 3v18l15-9L5 3z"
-                />
-              </svg>
-            </div>
-            <div className="mt-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
-              {formattedTime}
-            </div>
-            <div className="mt-2 text-gray-500 dark:text-gray-400 text-sm">
-              Jam yang menunjukkan waktu saat ini secara real-time.
-            </div>
-          </div>
+      </div>
 
-          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 w-full sm:w-[365px]">
-            <div className="flex items-center justify-between">
-              <div className="text-gray-600 dark:text-gray-300 text-sm font-medium">
-                Jumlah Laporan PKL
-              </div>
-              <svg
-                className="w-6 h-6 text-blue-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 10h16m-7 4h7"
-                />
-              </svg>
-            </div>
-            <div className="mt-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
-              {jurnalRecords.length}
-            </div>
-            <div className="mt-2 text-gray-500 dark:text-gray-400 text-sm">
-              Jumlah total laporan PKL yang sudah dikirim oleh siswa.
-            </div>
+      {/* Card Laporan PKL */}
+      <div className="card bg-base-100 shadow-md hover:shadow-lg transition">
+        <div className="card-body">
+          <div className="flex items-center gap-3">
+            <FileText className="text-blue-500" size={28} />
+            <h2 className="card-title">Laporan PKL</h2>
           </div>
-
-          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 w-full sm:w-[365px]">
-            <div className="flex items-center justify-between">
-              <div className="text-gray-600 dark:text-gray-300 text-sm font-medium">
-                Jumlah Absen yang telah dilakukan
-              </div>
-              <svg
-                className="w-6 h-6 text-green-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16m-7 4h7m-7 4h7"
-                />
-              </svg>
-            </div>
-            <div className="mt-4 text-3xl font-bold text-gray-800 dark:text-gray-100">
-              {attendanceRecords.length}
-            </div>
-            <div className="mt-2 text-gray-500 dark:text-gray-400 text-sm">
-              Jumlah absensi yang telah dilakukan oleh Anda.
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 w-full sm:w-[365px]">
-            <div className="flex items-center justify-between">
-              <div className="text-gray-600 dark:text-gray-300 text-sm font-medium">
-                Aktivitas Guru
-              </div>
-              <svg
-                className="w-6 h-6 text-yellow-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v16a1 1 0 01-1 1H4a1 1 0 01-1-1V4z"
-                />
-              </svg>
-            </div>
-            <div className="mt-2 text-3xl font-bold text-gray-800 dark:text-gray-100">
-              <p className="text-xl mt-5">
-              {teacherDepartureRecords.length > 0
-                  ? teacherDepartureRecords.map((record) => (
-                      <li key={record.id} className="list-none">
-                        {record.status} ke {record.industri_name}
-                      </li>
-                    ))
-                  : "Tidak ada aktifitas guru"}
-              </p>
-            </div>
-            <div className="mt-2 text-gray-500 dark:text-gray-400 text-sm">
-              Data Kegiatan guru
-            </div>
-          </div>
+          {loading ? (
+            <div className="h-6 w-16 bg-gray-300 animate-pulse rounded-md"></div>
+          ) : (
+            <p className="text-3xl font-bold">{jurnalRecords.length}</p>
+          )}
+          <p className="text-gray-500">Jumlah laporan PKL yang dikirim</p>
         </div>
-      ) : 'Loading...'}
+      </div>
+
+      {/* Card Jumlah Absen */}
+      <div className="card bg-base-100 shadow-md hover:shadow-lg transition">
+        <div className="card-body">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="text-green-500" size={28} />
+            <h2 className="card-title">Jumlah Absen</h2>
+          </div>
+          {loading ? (
+            <div className="h-6 w-16 bg-gray-300 animate-pulse rounded-md"></div>
+          ) : (
+            <p className="text-3xl font-bold">{attendanceRecords.length}</p>
+          )}
+          <p className="text-gray-500">Absensi yang telah dilakukan</p>
+        </div>
+      </div>
+
+      {/* Card Aktivitas Guru */}
+      <div className="card bg-base-100 shadow-md hover:shadow-lg transition">
+        <div className="card-body">
+          <div className="flex items-center gap-3">
+            <UserCheck className="text-yellow-500" size={28} />
+            <h2 className="card-title">Aktivitas Guru</h2>
+          </div>
+          {teacherDepartureRecords.length > 0 ? (
+            <ul className="list-disc ml-5">
+              {teacherDepartureRecords.map((record) => (
+                <li key={record.id} className="text-gray-700">
+                  {record.status} ke {record.industri_name}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 mt-4 text-2xl">Tidak ada aktivitas guru</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

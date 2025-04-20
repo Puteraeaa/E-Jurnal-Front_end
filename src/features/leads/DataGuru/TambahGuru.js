@@ -6,7 +6,9 @@ import { toast } from 'react-hot-toast';
 
 const token = Cookies.get('token');
 
+
 const AddTeacherPage = () => {
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const [jurusan, setJurusan] = useState([]);
     const [formData, setFormData] = useState({
@@ -28,6 +30,7 @@ const AddTeacherPage = () => {
     };
 
     const handleSubmit = async (e) => {
+        setLoading(true);
         e.preventDefault();
         try {
             const data = new FormData();
@@ -67,7 +70,9 @@ const AddTeacherPage = () => {
                     position: "top-right",
                     duration: 4000,
                 });
-            }
+            } 
+        }  finally {
+            setLoading(false);
         }
     };
     
@@ -174,8 +179,9 @@ const AddTeacherPage = () => {
                         <button
                             type="submit"
                             className="w-full px-4 py-2 text-white bg-blue-500 hover:bg-blue-700 rounded-lg"
+                            disabled={loading}
                         >
-                            Save
+                            {loading ? "Loading..." : "Submit"}
                         </button>
                         <button
                             type="button"

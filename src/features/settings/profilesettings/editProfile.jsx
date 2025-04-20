@@ -156,139 +156,136 @@ const EditStudentPage = () => {
 
     return (
         <div className="container mx-auto my-10 px-4">
-            <div className="bg-white shadow-lg rounded-lg p-6 border-t-4 border-blue-500">
-                <h1 className="text-3xl font-bold text-center mb-4">Edit Data Siswa</h1>
-                <p className="text-center border-b pb-4 mb-4">Silakan update form di bawah!</p>
+            <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 border-t-4 border-blue-500">
+                <h1 className="text-3xl font-bold text-center mb-4 text-gray-900 dark:text-gray-100">Edit Data Siswa</h1>
+                <p className="text-center border-b pb-4 mb-4 text-gray-700 dark:text-gray-300">Silakan update form di bawah!</p>
 
                 <form onSubmit={handleSubmit}>
-
-                <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Username Siswa</label>
+                    <div className="mb-4">
+                        <label className="block text-gray-700 dark:text-gray-300 font-bold mb-2">Username Siswa</label>
                         <input
                             type="text"
                             name="username"
                             value={formData.username}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
                             required
                         />
                     </div>
 
                     <div className="mb-4">
-    <label className="block text-gray-700 font-bold mb-2">Password Siswa </label>
-    <input
-        type="password"
-        name="password"
-        value={formData.password}
-        onChange={handleChange}
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-    />
-</div>
-
-<div className="mb-4">
-    <label className="block text-gray-700 font-bold mb-2">Konfirmasi Password</label>
-    <input
-        type="password"
-        name="password_confirmation"
-        value={formData.password_confirmation}
-        onChange={handleChange}
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-        required={formData.password ? true : false} // Required hanya jika password terisi
-    />
-</div>
-
+                        <label className="block text-gray-700 dark:text-gray-300 font-bold mb-2">Password Baru</label>
+                        <input
+                            type="password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Nama Siswa</label>
+                        <label className="block text-gray-700 dark:text-gray-300 font-bold mb-2">Konfirmasi Password Baru</label>
+                        <input
+                            type="password"
+                            name="password_confirmation"
+                            value={formData.password_confirmation}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
+                            required={formData.password ? true : false}
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-gray-700 dark:text-gray-300 font-bold mb-2">Nama Siswa</label>
                         <input
                             type="text"
                             name="name"
                             value={formData.name}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
                             required
                         />
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">NIS</label>
+                        <label className="block text-gray-700 dark:text-gray-300 font-bold mb-2">NIS</label>
                         <input
                             type="text"
                             name="nis"
                             value={formData.nis}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
                             required
                         />
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Tempat Lahir</label>
+                        <label className="block text-gray-700 dark:text-gray-300 font-bold mb-2">Tempat Lahir</label>
                         <input
                             type="text"
                             name="placeOfBirth"
                             value={formData.placeOfBirth}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
                             required
                         />
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Tanggal Lahir</label>
+                        <label className="block text-gray-700 dark:text-gray-300 font-bold mb-2">Tanggal Lahir</label>
                         <input
                             type="date"
                             name="dateOfBirth"
                             value={formData.dateOfBirth}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
                             required
                         />
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Jenis Kelamin</label>
+                        <label className="block text-gray-700 dark:text-gray-300 font-bold mb-2">Jenis Kelamin</label>
                         <select
                             name="gender"
                             value={formData.gender}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
                             required
                         >
-                            <option value="">Pilih Jenis Kelamin</option>
-                            <option value="male">Laki-Laki</option>
-                            <option value="female">Perempuan</option>
+                            <option value="" className="text-gray-500 dark:text-gray-400">Pilih Jenis Kelamin</option>
+                            <option value="male" className="text-gray-900 dark:text-gray-100">Laki-Laki</option>
+                            <option value="female" className="text-gray-900 dark:text-gray-100">Perempuan</option>
                         </select>
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Golongan Darah</label>
+                        <label className="block text-gray-700 dark:text-gray-300 font-bold mb-2">Golongan Darah</label>
                         <select
                             name="bloodType"
                             value={formData.bloodType}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
                             required
                         >
-                            <option value="">Pilih Golongan Darah</option>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="AB">AB</option>
-                            <option value="O">O</option>
+                            <option value="" className="text-gray-500 dark:text-gray-400">Pilih Golongan Darah</option>
+                            <option value="A" className="text-gray-900 dark:text-gray-100">A</option>
+                            <option value="B" className="text-gray-900 dark:text-gray-100">B</option>
+                            <option value="AB" className="text-gray-900 dark:text-gray-100">AB</option>
+                            <option value="O" className="text-gray-900 dark:text-gray-100">O</option>
                         </select>
                     </div>
 
                     <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Alamat</label>
+                        <label className="block text-gray-700 dark:text-gray-300 font-bold mb-2">Alamat</label>
                         <textarea
                             name="alamat"
                             value={formData.alamat}
                             onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-blue-500"
                             required
                         />
                     </div>
-
 
                     <button
                         type="submit"

@@ -36,6 +36,7 @@ const Bills = lazy(() => import('../pages/protected/Bills'))
 const ProfileSettings = lazy(() => import('../pages/protected/ProfileSettings'))
 const editProfile = lazy(() => import('../pages/protected/EditProfile'))
 const editProfileIndustri = lazy(() => import('../pages/protected/EditProfileIndustri'))
+const EditProfileGuru = lazy(() => import('../pages/protected/EditProfileGuru'))
 
 
 const Absen = lazy(() => import('../pages/protected/Absen'))
@@ -57,8 +58,23 @@ const Forbidden = lazy(() => import('../pages/protected/Forbidden'))
 
 const RekapNilai = lazy(() => import('../pages/protected/RekapNilai'))
 const DetailNilai = lazy(() => import('../features/rekapnilai/DetailNilai'))
+const AddNilai = lazy(() => import('../features/rekapnilai/AddNilai'))
 const EditNilai = lazy(() => import('../features/rekapnilai/EditNilai'))
+const exportNilai = lazy(() => import('../features/rekapnilai/Export'))
+const exportNilaiGuru = lazy(() => import('../features/rekapnilai/Export-Guru'))
 
+// bimbingan
+const FormBimbingan = lazy(() => import('../pages/protected/form'))
+
+// Forum
+const Forum = lazy(() => import('../pages/protected/forum'))
+const ForumDetail = lazy(() => import('../features/forum/forum_detail'))
+
+// CMS Page
+const CMS = lazy(() => import('../pages/protected/cms'))
+
+// Archive
+const Archive = lazy(() => import('../pages/protected/archive'))
 
 const routes = [
   {
@@ -147,6 +163,10 @@ const routes = [
     component: editProfileIndustri,
   },
   {
+    path: '/edit-profileguru/',
+    component: EditProfileGuru,
+  },
+  {
     path: '/settings-billing',
     component: Bills,
   },
@@ -208,6 +228,39 @@ const routes = [
     path: '/rekapnilai/editnilai/:id',
     component: EditNilai,
   },
+  {
+    path: '/rekapnilai/addnilai',
+    component: AddNilai,
+  },
+  {
+    path: '/rekapnilai/export',
+    component: exportNilai,
+  },
+  {
+    path: '/rekapnilai/export-guru/:id',
+    component: exportNilaiGuru,
+  },
+  {
+    path: '/bimbingan/form',
+    component: FormBimbingan,
+  },
+  {
+    path: '/forum',
+    component: Forum,
+  },
+  {
+    path: '/forum/:forumId',
+    component: ForumDetail,
+  },
+  {
+    path: '/cms',
+    component: CMS,
+  },
+  {
+    path: '/archived/:archiveId',
+    component: Archive,
+  },
+
   
 ]
 

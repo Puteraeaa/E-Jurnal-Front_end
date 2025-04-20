@@ -9,6 +9,8 @@ import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import swal from "sweetalert2";
 import routes from "../routes/sidebar";
+import svg from "../assets/simonik.svg";
+import svgnight from "../assets/simonik-night.svg";
 
 function LeftSidebar() {
   const location = useLocation();
@@ -19,6 +21,12 @@ function LeftSidebar() {
 
   const [profile, setProfile] = useState([]);
   const [imageUpdated, setImageUpdated] = useState(false); // State to track image updates
+  const [data, setData] = useState({});
+
+  const baseUrl = process.env.REACT_APP_BASE_CMS_URL;
+
+  const linkk = `${baseUrl}storage/${data?.logo}`;
+  const link = localStorage.getItem("logo");
 
   const getUser = async () => {
     try {
@@ -36,7 +44,23 @@ function LeftSidebar() {
 
   useEffect(() => {
     getUser();
-  }, [user.id, imageUpdated]); // Add imageUpdated to dependency array
+  }, [user.id, imageUpdated]);
+
+  useEffect(() => {
+    const fetchCms = async () => {
+      try {
+        const response = await Api.get("/settings");
+        const newLogo = `${baseUrl}storage/${response.data.logo}`;
+        if (localStorage.getItem("logo") !== newLogo) {
+          localStorage.setItem("logo", newLogo);
+        }
+        setData(response.data);
+      } catch (error) {
+        console.error("Error fetching CMS data:", error);
+      }
+    };
+    fetchCms();
+  }, []);
 
   const logout = async (e) => {
     e.preventDefault();
@@ -48,6 +72,12 @@ function LeftSidebar() {
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
       confirmButtonText: "Ya, Logout!",
+      cancelButtonText: "Batal",
+      width: "400px",
+      backdrop: "rgba(0,0,0,0.4)",
+      customClass: {
+        container: "dark-popup",
+      },
     });
 
     if (result.isConfirmed) {
@@ -80,6 +110,32 @@ function LeftSidebar() {
     document.getElementById("left-sidebar-drawer").click();
   };
 
+  const [archivedData, setArchivedData] = useState([]);
+  const [routesData, setRoutesData] = useState([]); // State untuk menyimpan routes
+
+  const fetchArchivedData = async () => {
+    try {
+      const response = await Api.get('admin/students/archived-year', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log('Archived data:', response.data.data);
+      setArchivedData(response.data.data);
+    } catch (error) {
+      console.error('Error fetching archived data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchArchivedData();
+  }, []); // Hanya dijalankan sekali saat komponen mount
+
+  useEffect(() => {
+    // Perbarui routes setiap kali archivedData berubah
+    setRoutesData(routes(archivedData));
+  }, [archivedData]);
+
   return (
     <div className="drawer-side z-30">
       <label htmlFor="left-sidebar-drawer" className="drawer-overlay"></label>
@@ -91,38 +147,51 @@ function LeftSidebar() {
           <XMarkIcon className="h-5 inline-block w-5" />
         </button>
 
-        <li className="mb-2 font-semibold text-xl">
-          <Link to={"/app/dashboard"}>
-            <img
-              src={"/smk.png"}
-              alt="Profile"
-              className="w-10 h-10 rounded-full mr-1"
-            />{" "}
-            E-Jurnal
-          </Link>{" "}
-        </li>
+        <Link
+          to={"/app/dashboard"}
+          className="flex items-center hover:bg-base-200"
+        >
+          <img
+            src={link}
+            alt="Profile"
+            className="w-full h-[80px] mr-2 mb-[-10px] mt-[-10px] cursor-pointer dark:hidden  "
+          />
+          <img
+            src={link}
+            alt="Profile"
+            className="w-full h-[80px] mr-2 mb-[-10px] mt-[-10px] cursor-pointer dark:block hidden"
+          />
+        </Link>
 
         <Link
           to={"/app/settings-profile"}
           className="p-4 flex items-center mb-1 mt-1 hover:bg-base-200 MR-2 ml-1"
         >
           <img
-           src={ profile?.student?.image && profile?.student?.image !== "https://api.jurnal.pplgsmkn1ciomas.my.id/storage" 
-            ? profile.student.image 
-            : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png" }
-          
+            src={
+              profile?.student?.image &&
+              profile?.student?.image !==
+                "https://api.jurnal.pplgsmkn1ciomas.my.id/storage"
+                ? profile.student.image
+                : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+            }
             alt="Profile"
             className="w-12 h-12 object-cover cursor-pointer rounded-full mr-5"
           />
           <div>
-            <div className="text-auto font-semibold">{profile.student?.name || profile.teachers?.name || profile.industries?.name || profile.name}</div>
+            <div className="text-auto dark:text-white font-semibold">
+              {profile.student?.name ||
+                profile.teacher?.name ||
+                profile.industries?.name ||
+                profile.name}
+            </div>
             <div className="text-sm">{profile.roles}</div>
           </div>
 
           <div className="divider mt-0 mb-0"></div>
         </Link>
 
-        {routes.map((route, k) => {
+        {routesData.map((route, k) => {
           return (
             <li key={k}>
               {route.submenu ? (
@@ -132,7 +201,11 @@ function LeftSidebar() {
                   end
                   to={route.path}
                   className={({ isActive }) =>
-                    `${isActive ? "font-semibold bg-base-200" : "font-normal"}`
+                    `${
+                      isActive
+                        ? "font-semibold bg-base-200 text-[#3b82f5]"
+                        : "font-normal dark:text-white"
+                    }`
                   }
                 >
                   {route.icon} {route.name}

@@ -3,12 +3,22 @@ import { useNavigate, useParams } from "react-router-dom";
 import Api from "../../../api";
 import Cookies from "js-cookie";
 import { toast } from "react-hot-toast";
+import CryptoJS from "crypto-js";
 
 const token = Cookies.get("token");
 
 const EditStudentPage = () => {
   const navigate = useNavigate();
-  const { id } = useParams(); // Extract the student ID from URL params
+  const { id } = useParams();
+  
+  const decryptId = (encryptedId) => {
+    const secretKey = process.env.REACT_APP_SECRET_KEY;
+    const decoded = decodeURIComponent(encryptedId); 
+    const bytes = CryptoJS.AES.decrypt(decoded, secretKey);
+    return bytes.toString(CryptoJS.enc.Utf8);
+};
+
+const decryptedId = decryptId(id);
 
   const [jurusan, setJurusan] = useState([]);
   const [formData, setFormData] = useState({
@@ -22,7 +32,7 @@ const EditStudentPage = () => {
 
   const fetchTeacherData = async () => {
     try {
-      const response = await Api.get(`admin/users/${id}`, {
+      const response = await Api.get(`admin/users/${decryptedId}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -32,6 +42,8 @@ const EditStudentPage = () => {
       setFormData({
         username: username || "",
         name: teacher.name || "",
+        password: "", // Leave password empty if not changing
+        password_confirmation: "",
         user_id: teacher.user_id || "",
         no_hp: teacher.no_hp || "",
         departemen_id: teacher.departemen_id || "",
@@ -45,6 +57,10 @@ const EditStudentPage = () => {
     }
   };
 
+  useEffect(() => {
+    fetchTeacherData();
+  }, []);
+
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
     setFormData((prevData) => ({
@@ -56,7 +72,7 @@ const EditStudentPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await Api.put(`admin/users/${id}`, formData, {
+      await Api.put(`admin/users/${decryptedId}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -100,20 +116,40 @@ const EditStudentPage = () => {
     }
   };
 
-  useEffect(() => {
-    fetchTeacherData();
-  }, [id]);
+  const fetchDataAll = async () => {
+    let allData = [];
+    let pageNumber = 1;
+    let totalPages = 1; 
+
+    while (pageNumber <= totalPages) {
+      const response = await Api.get(`admin/departemen?`, {
+        params: {
+          page: pageNumber,
+          per_page: 100, // or set this to the max allowed per request
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const { data } = response.data.data;
+      const { current_page, last_page } = response.data.data;
+
+      // Concatenate new data to allData array
+      allData = [...allData, ...data];
+
+      // Update pagination details
+      pageNumber = current_page + 1;
+      totalPages = last_page;
+    }
+
+   setJurusan(allData);
+  };
 
   useEffect(() => {
-    Api.get("admin/departemen", {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then((response) => {
-        const data = response.data.data.data || []; // Ensure the data is an array
-        setJurusan(Array.isArray(data) ? data : []);
-      })
-      .catch((error) => {});
+    fetchDataAll();
   }, []);
+
 
   return (
     <div className="container mx-auto my-10 px-4">
@@ -135,6 +171,33 @@ const EditStudentPage = () => {
               required
             />
           </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-700 font-bold mb-2">
+              Password (Biarkan kosong jika tidak ingin mengubah)
+            </label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-700 font-bold mb-2">
+              Password Confirmation (Biarkan kosong jika tidak ingin mengubah)
+            </label>
+            <input
+              type="password"
+              name="password_confirmation"
+              value={formData.password_confirmation}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
           <div className="mb-4">
             <label className="block text-gray-700 font-bold mb-2">Nama</label>
             <input

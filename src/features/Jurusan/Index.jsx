@@ -1,12 +1,8 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import Api from "../../api";
 import Cookies from "js-cookie";
 import { toast } from "react-hot-toast";
-import hasAnyPermission from "../../utils/Permissions.jsx";
-import Pagination from "../../components/Pagination";
 import swal from "sweetalert2";
-import axios from "axios";
 
 export default function AcademicProgramList() {
   const [academicPrograms, setAcademicPrograms] = useState([]);
@@ -19,27 +15,51 @@ export default function AcademicProgramList() {
   const [selectedProgram, setSelectedProgram] = useState(null);
   const [newProgramName, setNewProgramName] = useState("");
   const token = Cookies.get("token");
+  const [loading, setLoading] = useState(false);
 
-  const fetchData = async (pageNumber = 1, keywords = "") => {
-    const page = pageNumber ? pageNumber : pagination.currentPage;
-
-    await Api.get(`admin/departemen`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }).then((response) => {
-      setAcademicPrograms(response.data.data.data);
+  const fetchData = async (keywords = "") => {
+    setLoading(true); // Mulai loading
+    let allData = [];
+    let pageNumber = 1;
+    let totalPages = 1; // Placeholder to start the loop
+  
+    while (pageNumber <= totalPages) {
+      const response = await Api.get(`admin/departemen?search=${keywords}`, {
+        params: {
+          page: pageNumber,
+          per_page: 100, // or set this to the max allowed per request
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
       setPagination(() => ({
         currentPage: response.data.data.current_page,
         perPage: response.data.data.per_page,
-        total: response.data.data.total
+        total: response.data.data.total,
       }));
-    });
+  
+      const { data } = response.data.data;
+      const { current_page, last_page } = response.data.data;
+  
+      // Concatenate new data to allData array
+      allData = [...allData, ...data];
+  
+      // Update pagination details
+      pageNumber = current_page + 1;
+      totalPages = last_page;
+    }
+  
+    setAcademicPrograms(allData);
+    console.log(allData);
+    setLoading(false); // Selesai loading
   };
 
+
   useEffect(() => {
-    fetchData();
-  }, []);
+    fetchData(keywords);
+  }, [keywords]);
 
   const handleEditClick = (program, e) => {
     e.preventDefault();
@@ -61,7 +81,7 @@ export default function AcademicProgramList() {
       });
 
       if (isConfirmed) {
-        const response = await Api.delete(`admin/dapartemen/${program.id}`, {
+        const response = await Api.delete(`admin/departemen/${program.id}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -146,6 +166,7 @@ export default function AcademicProgramList() {
         setNewProgramName("");
       }
     } catch (error) {
+      console.log(error);
       toast.error(error.response.data.message, {
         position: "top-right",
         duration: 4000  
@@ -153,9 +174,10 @@ export default function AcademicProgramList() {
     }
   };
 
-  const searchData = async (e) => {
+  const handleSearch = (e) => {
+    e.preventDefault();
     setKeywords(e.target.value);
-    fetchData(1, e.target.value);
+    fetchData(e.target.value);
   };
 
   return (
@@ -175,78 +197,113 @@ export default function AcademicProgramList() {
         </div>
 
         {/* Add Program Button */}
-        <div>
+        <div className="relative mb-3">
+          <input
+            type="text"
+            value={keywords}
+            onChange={handleSearch}
+            className="input input-bordered w-full pl-10 pr-4 py-2 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-gray-500 transition duration-300"
+            placeholder="Cari jurusan..."
+          />
+          <i className="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+
           <button
-            onClick={() => document.getElementById("my_modal_add").showModal()}
-            className="bg-blue-600 dark:bg-gray-700 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-md w-[240px] flex justify-center text-sm md:text-[17px] items-center mb-0 md:w-[400px] md:mb-4"
+            onClick={() => setKeywords("")}
+            className="btn btn-ghost btn-circle absolute right-2 top-1/2 transform -translate-y-1/2"
           >
-            <i className="fa fa-plus-circle mr-2 "></i> Tambah Data Jurusan
+            <i className="fas fa-times"></i>
           </button>
         </div>
+
+        <button
+          onClick={() => document.getElementById("my_modal_add").showModal()}
+          className="bg-blue-600 dark:bg-gray-700 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-lg w-[240px] flex justify-center text-sm md:text-[17px] items-center mb-0 md:w-[400px] md:mb-4 transition-transform duration-300 transform hover:scale-105"
+        >
+          <i className="fa fa-plus-circle mr-2"></i> Tambah Data Jurusan
+        </button>
 
         <div>{/* Search functionality can be implemented here */}</div>
       </div>
 
       <div className="mt-1">
-        <div className="bg-white dark:bg-[#1c2229] shadow-md rounded-lg overflow-hidden">
-          <div className="p-4">
-            <div className="overflow-x-auto">
-              <table className="table-auto w-[140%] md:w-full">
-                <thead>
-                  <tr className="bg-[#3b82f5] dark:bg-gray-700 text-black dark:text-white text-sm uppercase font-semibold rounded-lg">
-                    <th className="p-2 text-center col-3 ">No.</th>
-                    <th className="p-2 text-center spacing-1 col-6">
-                      Program Name
-                    </th>
-                    <th className="p-2 text-center col-6">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {academicPrograms.length > 0 ? (
-                    academicPrograms.map((program, index) => (
-                      <tr className="text-gray-700 dark:text-white" key={index}>
-                        <td className="p-2 text-center font-bold border-b text-xs md:text-sm">
-                          {++index +
-                            (pagination.currentPage - 1) * pagination.perPage}
-                        </td>
-                        <td className="p-2 text-center font-bold border-b text-xs md:text-sm">
-                          {program.name}
-                        </td>
-                        <td className="p-2 text-center border-b text-xs md:text-sm ">
-                          <button
-                            className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded-lg text-xs mr-2 md:p-3"
-                            onClick={(e) => handleEditClick(program, e)}
-                          >
-                            <i className="fa fa-pencil-alt"></i>
-                          </button>
-                          <button
-                            onClick={(e) => handleDelete(program, e)}
-                            className="bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded-lg text-xs md:p-3"
-                          >
-                            <i className="fa fa-trash-alt"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr className="text-gray-700">
-                      <td
-                        className="p-2 text-center font-bold border-b text-xs md:text-sm"
-                        colSpan="3"
-                      >
-                        No data available.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+  <div className="bg-white dark:bg-[#1c2229] shadow-md rounded-lg overflow-hidden">
+    <div className="p-4">
+      <div className="overflow-x-auto">
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <svg
+              className="animate-spin h-10 w-10 text-blue-600"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v4a4 4 0 100 8v4a8 8 0 01-8-8z"
+              />
+            </svg>
           </div>
-
-          {/* Pagination could be added here */}
-        </div>
+        ) : (
+          <table className="table-auto w-[140%] md:w-full">
+            <thead>
+              <tr className="bg-[#3b82f5] dark:bg-gray-700 text-black dark:text-white text-sm uppercase font-semibold rounded-lg">
+                <th className="p-2 text-center col-6">ID Jurusan</th>
+                <th className="p-2 text-center spacing-1 col-6">Jurusan Name</th>
+                <th className="p-2 text-center col-6">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {academicPrograms.length > 0 ? (
+                academicPrograms.map((program, index) => (
+                  <tr className="text-gray-700 dark:text-white" key={index}>
+                    <td className="p-2 text-center font-bold border-b text-xs md:text-sm">
+                      {program.id}
+                    </td>
+                    <td className="p-2 text-center font-bold border-b text-xs md:text-sm">
+                      {program.name}
+                    </td>
+                    <td className="p-2 text-center border-b text-xs md:text-sm ">
+                      <button
+                        className="bg-blue-500 hover:bg-blue-600 text-white py-1 px-2 rounded-lg text-xs mr-2 md:p-3"
+                        onClick={(e) => handleEditClick(program, e)}
+                      >
+                        <i className="fa fa-pencil-alt"></i>
+                      </button>
+                      <button
+                        onClick={(e) => handleDelete(program, e)}
+                        className="bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded-lg text-xs md:p-3"
+                      >
+                        <i className="fa fa-trash-alt"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr className="text-gray-700">
+                  <td
+                    className="p-2 text-center font-bold border-b text-xs md:text-sm"
+                    colSpan="3"
+                  >
+                    No data available.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
-
+    </div>
+  </div>
+</div>
       {/* Edit Modal */}
       <dialog id="my_modal_3" style={{ zIndex: -1 }} className="modal">
         <div className="modal-box">

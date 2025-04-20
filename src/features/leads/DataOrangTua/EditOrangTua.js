@@ -3,17 +3,29 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Api from '../../../api';
 import Cookies from 'js-cookie';
 import { toast } from 'react-hot-toast';
+import CryptoJS from 'crypto-js';
 
 const token = Cookies.get('token');
 
 const EditParentPage = () => {
     const navigate = useNavigate();
     const { id } = useParams();
+
+    const decryptId = (encryptedId) => {
+           const secretKey = process.env.REACT_APP_SECRET_KEY;
+           const decoded = decodeURIComponent(encryptedId); 
+           const bytes = CryptoJS.AES.decrypt(decoded, secretKey);
+           return bytes.toString(CryptoJS.enc.Utf8);
+       };
+       
+       const decryptedId = decryptId(id);
+
+
     const [formData, setFormData] = useState({
         username: "",
         name: "",
         nama: "",
-        roles: "",
+        roles: "orangtua",
         gender: "",
         alamat: "",
         occupation: "",
@@ -22,7 +34,7 @@ const EditParentPage = () => {
 
     const fetchParentData = async () => {
         try {
-            const response = await Api.get(`admin/users/${id}`, {
+            const response = await Api.get(`admin/users/${decryptedId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -58,7 +70,7 @@ const EditParentPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await Api.put(`admin/users/${id}`, formData, {
+            await Api.put(`admin/users/${decryptedId}`, formData, {
                 headers: {
                     Authorization: `Bearer ${token},`
                 },
@@ -143,16 +155,6 @@ const EditParentPage = () => {
                         />
                     </div>
 
-                    <div className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">Roles</label>
-                        <input
-                            type="text"
-                            name="roles"
-                            value={formData.roles}
-                            onChange={handleChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                        />
-                    </div>
 
                     <div className="mb-4">
                         <label className="block text-gray-700 font-bold mb-2">Gender</label>

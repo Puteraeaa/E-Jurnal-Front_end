@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 
 // Buat instance Axios
 const Api = axios.create({
-  baseURL: 'https://api.jurnal.pplgsmkn1ciomas.my.id/api',
+  baseURL: process.env.REACT_APP_API_BASE_URL,
   headers: {
     "Accept": "application/json",
     "Content-Type": "application/json",

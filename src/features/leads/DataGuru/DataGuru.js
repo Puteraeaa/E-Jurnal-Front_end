@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import TitleCard from "../../../components/Cards/TitleCard";
-import { openModal } from "../../common/modalSlice";
 import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
 import PencilIcon from '@heroicons/react/24/outline/PencilIcon';
 import EyeIcon from "@heroicons/react/24/outline/EyeIcon";
@@ -13,9 +12,9 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import swal from "sweetalert2";
 import template from '../../../assets/Template import-guru.xlsx';  
+import CryptoJS from 'crypto-js';
 
 const DataGuru = () => {
-    const dispatch = useDispatch();
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [pagination, setPagination] = useState({
@@ -31,20 +30,28 @@ const DataGuru = () => {
     const token = Cookies.get("token");
 
     useEffect(() => {
-        fetchData(); // Fetch data when the component mounts
-    }, [token, currentPage]);
+        fetchData(currentPage, searchTerm);
+    }, [currentPage, searchTerm]);
 
-    const fetchData = async (page = currentPage) => {
-        setIsLoading(true);
-        try {
-            const response = await Api.get(`admin/teacher?page=${page}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setGuru(response.data.data.data || []);
+
+
+
+    const encryptId = (id) => {
+        const secretKey = process.env.REACT_APP_SECRET_KEY;
+        const encrypted = CryptoJS.AES.encrypt(id.toString(), secretKey).toString();
     
+        return encodeURIComponent(encrypted); // Encode hasil enkripsi agar valid di URL
+    };
 
-
-
+    const fetchData = async (pageNumber = 1, search = "") => {
+        try {
+            const response = await Api.get(`admin/teacher?page=${pageNumber}&search=${search}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                }
+            });
+            setGuru(response.data.data.data);
+       
             setPagination({
                 currentPage: response.data.data.current_page,
                 perPage: response.data.data.per_page,
@@ -52,10 +59,9 @@ const DataGuru = () => {
             });
         } catch (error) {
             console.error("Error fetching data:", error);
-        } finally {
-            setIsLoading(false);
         }
     };
+
   
 
     
@@ -126,19 +132,16 @@ const DataGuru = () => {
         }
       }
 
-    const filteredLeads = guru.filter(lead =>
-        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.no_hp.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (lead.departements && lead.departements.name.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+  
     
 
 
-    const currentItems = filteredLeads.slice(
-        (currentPage - 1) * pagination.perPage,
-        currentPage * pagination.perPage
-    );
+    
 
+      const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1); 
+    };
   
 
     const handleFileChange = (e) => {
@@ -214,7 +217,7 @@ const DataGuru = () => {
                     position: "top-right",
                     duration: 4000,
                 });
-                fetchData(currentPage);  // Re-fetch data after deletion
+                fetchData(currentPage);  
             }
         } catch (error) {
             console.error("Error deleting lead:", error);
@@ -229,7 +232,7 @@ const DataGuru = () => {
         <>
             <ToastContainer />
             <TitleCard 
-                title="Data Guru" 
+                title={`Data Guru (${pagination.total})`} 
                 topMargin="mt-2" 
                 TopSideButtons={
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
@@ -238,7 +241,7 @@ const DataGuru = () => {
                             className="input input-bordered input-sm mb-4 sm:mb-0 sm:mr-4 w-full sm:w-auto"
                             placeholder="Search"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={handleSearchChange}
                         />
                         <Link to="/app/data/guru/tambah">
                             <button className="btn btn-sm normal-case btn-primary w-full sm:w-auto">
@@ -255,6 +258,7 @@ const DataGuru = () => {
                     <table className="table w-full text-center">
                         <thead>
                             <tr>
+                                <th className=" text-center">User ID</th>
                                 <th>Nama Guru</th>
                                 <th>Nomer Guru</th>
                                 <th className="w-1/4 text-center">Pelajaran</th>
@@ -267,8 +271,9 @@ const DataGuru = () => {
                                     <td colSpan="4" className="text-center">Loading...</td>
                                 </tr>
                             ) : (
-                                filteredLeads.map((lead) => (
+                                guru.map((lead) => (
                                     <tr key={lead.id}>
+                                        <td className="whitespace-normal break-words">{lead.id}</td>
                                         <td className="whitespace-normal break-words">{lead.name}</td>
                                         <td className="whitespace-normal break-words">{lead.no_hp}</td>
                                         <td className="whitespace-normal break-words max-w-xs">
@@ -278,7 +283,7 @@ const DataGuru = () => {
                                             <button className="btn btn-sm btn-square btn-warning" onClick={() => { setSelectedLead(lead); setIsDetailModalOpen(true); }}>
                                                 <EyeIcon className="h-4 w-4" />
                                             </button>
-                                            <Link to={`/app/data/guru/edit/${lead.user_id}`}>
+                                            <Link to={`/app/data/guru/edit/${encryptId(lead.user_id)}`}>
                                                 <button className="btn btn-sm btn-square btn-primary">
                                                     <PencilIcon className="h-4 w-4" />
                                                 </button>
@@ -288,7 +293,7 @@ const DataGuru = () => {
                                             </button>
                                         </td>
                                     </tr>
-                                ) ) 
+                                )  ) 
                             ) }
                         </tbody>
                     </table>
@@ -302,14 +307,27 @@ const DataGuru = () => {
             
             <dialog id="my_modal_5" className="modal">
                 <form method="dialog" className="modal-box">
-                    <h3 className="font-bold text-lg">Upload Excel File</h3>
-                    <p className="py-4">Pilih file Excel yang ingin diunggah:</p>
-                    <input type="file" accept=".xlsx" onChange={handleFileChange} className="file-input file-input-bordered file-input-primary w-full max-w-xs" />
+                    <h3 className="font-bold text-lg">Upload Excel Siswa</h3>
+                    <p className="py-4">
+                        Silahkan upload file Excel siswa pada field di bawah ini.
+                    </p>
+                    <a className="btn bg-red-500 text-white w-[150px] text-xs mb-3" href="https://drive.google.com/drive/folders/1heRByiuCHQ7YAxJE8Azr9NMajwF0MKzT?usp=sharing"  target="_blank" >Download Template</a>
+                    <input
+                        type="file"
+                        className="file-input file-input-bordered w-full"
+                        onChange={handleFileChange}
+                    />
                     <div className="modal-action">
+                        <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={handleFileUpload}
+                            disabled={isLoading}
+                        >
+                            {isLoading ? "Uploading..." : "Submit"}
+                        </button>
                         <button className="btn">Close</button>
-                        <button className="btn btn-primary" type="button" onClick={handleFileUpload}>Upload</button>
                     </div>
-                    <button className="btn btn-link mt-4" type="button" onClick={downloadTemplate}>Download Template</button>
                 </form>
             </dialog>
         </>

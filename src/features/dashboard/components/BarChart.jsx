@@ -1,25 +1,16 @@
+import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
 import Api from "../../../api";
-import React, { useState, useEffect } from "react";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-import { Bar } from 'react-chartjs-2';
-import TitleCard from '../../../components/Cards/TitleCard';
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+import TitleCard from "../../../components/Cards/TitleCard";
+import Chart from "react-apexcharts";
+import ApexCharts from "apexcharts";
 
 function BarChart() {
   const token = Cookies.get("token");
   const [dashboard, setDashboard] = useState([]);
-  const [chartData, setChartData] = useState({});
-  const [filterBy, setFilterBy] = useState('month'); // 'day' or 'month'
+  const [chartOptions, setChartOptions] = useState({});
+  const [chartSeries, setChartSeries] = useState([]);
+  const [filterBy, setFilterBy] = useState("month"); // 'day' or 'month'
   const [selectedMonth, setSelectedMonth] = useState(""); // Month selected when filterBy is 'day'
   const [loading, setLoading] = useState(true);
   const [availableMonths, setAvailableMonths] = useState([]);
@@ -51,11 +42,20 @@ function BarChart() {
     }
   }, [filterBy, selectedMonth]);
 
+  useEffect(() => {
+    if (Object.keys(chartOptions).length > 0) {
+      const chart = new ApexCharts(document.querySelector("#chart2"), chartOptions);
+      chart.render();
+      return () => chart.destroy(); // Clean up previous chart instance
+    }
+  }, [chartOptions]);
+
   const processChartData = (attendanceBreakdown) => {
     const monthData = {};
+    console.log("data Bulan", monthData);
     const dailyData = {};
 
-    attendanceBreakdown.forEach(item => {
+    attendanceBreakdown.forEach((item) => {
       const date = new Date(item.period);
       const month = date.toLocaleString('default', { month: 'long' });
       const day = date.getDate();
@@ -76,38 +76,89 @@ function BarChart() {
 
     setAvailableMonths(Object.keys(monthData));
 
-    if (filterBy === 'month') {
+    if (filterBy === "month") {
       const labels = Object.keys(monthData);
       const data = Object.values(monthData);
-      setChartData({
-        labels,
-        datasets: [
+
+      setChartOptions({
+        chart: {
+          height: 350,
+          type: "bar",
+          zoom: {
+            enabled: true,
+          },
+        },
+        dataLabels: {
+          enabled: true,
+        },
+        stroke: {
+          curve: "straight",
+        },
+        series: [
           {
-            label: 'Data absen berdasarkan bulan',
-            data,
-            backgroundColor: 'rgba(53, 162, 235, 1)',
+            name: "Data Absen berdasarkan bulan",
+            data: data,
           },
         ],
+        xaxis: {
+          categories: labels,
+        },
+        yaxis: {
+          labels: {
+            formatter: function (value) {
+              return value + "absen";
+            },
+          },
+        },
       });
-    } else if (filterBy === 'day' && selectedMonth) {
+    } else if (filterBy === "day" && selectedMonth) {
       const labels = Object.keys(dailyData[selectedMonth] || {});
-      const data = labels.map(day => dailyData[selectedMonth][day] || 0);
-      setChartData({
-        labels,
-        datasets: [
+      const data = labels.map((day) => dailyData[selectedMonth][day] || 0);
+
+      setChartOptions({
+        chart: {
+          height: 350,
+          type: "bar",
+          zoom: {
+            enabled: true,
+          },
+        },
+        dataLabels: {
+          enabled: true,
+        },
+        stroke: {
+          curve: "straight",
+        },
+        series: [
           {
-            label: `Data absen per hari (${selectedMonth})`,
-            data,
-            backgroundColor: 'rgba(53, 162, 235, 1)',
+            name: `Data Absen per hari (${selectedMonth})`,
+            data: data,
           },
         ],
+        xaxis: {
+          categories: labels,
+        },
+        yaxis: {
+          labels: {
+            formatter: function (value) {
+              return value + " absen";
+            },
+          },
+        },
       });
+
+      setChartSeries([
+        {
+          name: `Jumlah Absen (${selectedMonth})`,
+          data,
+        },
+      ]);
     }
   };
 
   const handleFilterChange = (e) => {
     setFilterBy(e.target.value);
-    if (e.target.value === 'day') {
+    if (e.target.value === "day") {
       setSelectedMonth(""); // Reset selectedMonth if changing to 'day'
     }
   };
@@ -116,17 +167,8 @@ function BarChart() {
     setSelectedMonth(e.target.value);
   };
 
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      }
-    },
-  };
-
   return (
-    <TitleCard 
+    <TitleCard
       title="Statistik Data Absen"
       TopSideButtons={
         <div className="relative inline-block">
@@ -138,7 +180,7 @@ function BarChart() {
             <option value="day">Hari</option>
             <option value="month">Bulan</option>
           </select>
-          {filterBy === 'day' && (
+          {filterBy === "day" && (
             <select
               value={selectedMonth}
               onChange={handleMonthChange}
@@ -161,10 +203,10 @@ function BarChart() {
         </div>
       ) : (
         <div>
-          {filterBy === 'day' && !selectedMonth ? (
+          {filterBy === "day" && !selectedMonth ? (
             <p className="text-center text-gray-500">Silahkan pilih bulan</p>
           ) : (
-            chartData.labels && <Bar options={options} data={chartData} />
+            <div id="chart2"></div>
           )}
         </div>
       )}
@@ -173,3 +215,4 @@ function BarChart() {
 }
 
 export default BarChart;
+

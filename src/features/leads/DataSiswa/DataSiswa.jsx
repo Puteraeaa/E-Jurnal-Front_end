@@ -15,6 +15,9 @@ import "react-toastify/dist/ReactToastify.css";
 import swal from "sweetalert2";
 import template from '../../../assets/Template import-siswa.xlsx';
 import hasAnyPermission from "../../../utils/Permissions";
+import CryptoJS from "crypto-js";
+import Select from "react-select";
+
 
 
 function SkeletonRow() {
@@ -58,65 +61,138 @@ const Leads = () => {
         total: 0
     });
     const token = Cookies.get("token");
+    const [academicPrograms, setAcademicPrograms] = useState([]);
+    
 
-    const fetchData = async (pageNumber = 1) => {
-        const page = pageNumber;
+    const dataClass = [
+        { value: null, label: "Semua Kelas" }, // Option for null
+        ...academicPrograms.map((siswa) => ({
+            value: siswa.id,
+            label: siswa.name,
+        })),
+    ];
+    const [selectedClass, setSelectedClass] = useState(null);
+    const [isLoadingData, setIsLoadingData] = useState(false);
 
-        let endpoint = '';
+    const encryptId = (id) => {
+            const secretKey = process.env.REACT_APP_SECRET_KEY;
+            const encrypted = CryptoJS.AES.encrypt(id.toString(), secretKey).toString();
+        
+            return encodeURIComponent(encrypted); // Encode hasil enkripsi agar valid di URL
+        };
 
-        if (role === "orang tua" || role === "guru" || role === "industri") {
-            endpoint = `admin/Studentbyrole`;
-        } else {
-            endpoint = `admin/student`;
-        }
 
-        try {
-            const response = await Api.get(`${endpoint}?page=${page}`, {
+        const fetchDataClass = async (keywords = "") => {
+            let allData = [];
+            let pageNumber = 1;
+            let totalPages = 1; // Placeholder to start the loop
+        
+            while (pageNumber <= totalPages) {
+              const response = await Api.get(`admin/classes?search=${keywords}`, {
+                params: {
+                  page: pageNumber,
+                  per_page: 100, // or set this to the max allowed per request
+                },
                 headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            });
-
-            setSiswa(response.data.data.data);
-
-            setPagination({
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+        
+              setPagination(() => ({
                 currentPage: response.data.data.current_page,
                 perPage: response.data.data.per_page,
-                total: response.data.data.total
-            });
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        }
-    };
+                total: response.data.data.total,
+              }));
+        
+            
+        
+              const { data } = response.data.data;
+              const { current_page, last_page } = response.data.data;
+        
+              // Concatenate new data to allData array
+              allData = [...allData, ...data];
+        
+              // Update pagination details
+              pageNumber = current_page + 1;
+              totalPages = last_page;
+            }
+
+            setAcademicPrograms(allData);
+           
+        
+          };
+        
+          useEffect(() => {
+            fetchDataClass();
+          }, []);
+
+
+          const fetchData = async (pageNumber = 1, search = "", classId = null) => {
+            setIsLoadingData(true); // Set loading to true when fetching data
+            console.log(searchTerm);
+            const page = pageNumber;
+            const searchParam = searchTerm;
+            const class_id = classId || selectedClass?.value; // Gunakan class_id dari parameter atau state
+            let endpoint = "";
+          
+            if (role === "orang tua" || role === "guru" || role === "industri") {
+              endpoint = `admin/Studentbyrole`;
+            } else {
+              endpoint = `admin/student`;
+            }
+          
+            try {
+           
+              const response = await Api.get(`${endpoint}`, {
+                params: {
+                  page,
+                  search: searchParam,
+                  class_id,
+                },
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+          
+              setSiswa(response.data.data.data);
+              setPagination({
+                currentPage: response.data.data.current_page,
+                perPage: response.data.data.per_page,
+                total: response.data.data.total,
+              });
+            } catch (error) {
+              console.error("Error fetching data:", error);
+            } finally {
+              setIsLoadingData(false); // Set loading to false after fetching data
+            }
+          };
+    
+          useEffect(() => {
+            fetchData(currentPage, searchTerm, selectedClass?.value); // Tambahkan selectedClass sebagai parameter
+          }, [currentPage, searchTerm, selectedClass]); // Tambahkan selectedClass sebagai dependensi
+    
+          const handleClassChange = (selectedOption) => {
+            setSelectedClass(selectedOption); // Perbarui state selectedClass
+            setCurrentPage(1); // Reset ke halaman pertama
+            fetchData(1, searchTerm, selectedOption?.value); // Kirim class_id ke fetchData
+          };
 
     useEffect(() => {
-        fetchData(currentPage);
-    }, [currentPage]);
+        fetchData(currentPage, searchTerm);
+    }, [currentPage, searchTerm]);
 
     useEffect(() => {
         dispatch(getLeadsContent());
     }, [dispatch]);
 
-    const handleSearchChange = (e) => {
-        setSearchTerm(e.target.value);
-    };
+   
 
-    const filteredLeads = siswa.filter((lead) =>
-        lead.classes?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.industries?.name.toLowerCase().includes(searchTerm.toLowerCase())||
-        lead.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
-    const deleteCurrentLead = (id) => {
-        dispatch(openModal({
-            title: "Confirmation",
-            bodyType: "CONFIRMATION",
-            extraObject: { message: `Are you sure you want to delete this lead?`, id }
-        }));
-    };
+
+   
 
     const getStatusClass = (lead) => {
-        if (lead.industries) return "badge badge-secondary badge-xs p-2 bg-green-500 border-green-500 w-20"; // Status is "Sedang"
+        if (lead.industries) return "badge badge-secondary badge-xs p-3 bg-green-500 border-green-500 w-20"; // Status is "Sedang"
         return "badge badge-secondary bg-red-500 w-20"; // Status is "Belum"
     };
 
@@ -225,6 +301,9 @@ const Leads = () => {
         }
     };
 
+
+
+
     const handleFileChange = (e) => {
         setSelectedFile(e.target.files[0]);
     };
@@ -307,6 +386,72 @@ const Leads = () => {
             });
         }
     };
+
+    // archive siswa
+    const [selectedStudents, setSelectedStudents] = useState([]);
+    const [showCheckbox, setShowCheckbox] = useState(false);
+    
+    const toggleCheckbox = () => {
+      setShowCheckbox((prev) => !prev); // Toggle checkbox visibility
+    };
+
+    const handleCheckboxChange = (studentId) => {
+      setSelectedStudents((prevSelected) => {
+        if (prevSelected.includes(studentId)) {
+          return prevSelected.filter((id) => id !== studentId);
+        } else {
+          return [...prevSelected, studentId];
+        }
+      });
+    };
+    
+
+    const handleArchiveSelected = async () => {
+      if (selectedStudents.length === 0) {
+        toast.error("No students selected for archiving.", {
+          position: "top-right",
+          duration: 4000,
+        });
+        return;
+      }
+
+      try {
+        const { isConfirmed } = await swal.fire({
+          title: "Yakin?",
+          text: "Apakah Anda yakin ingin mengarchive siswa yang dipilih?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Archive!",
+        });
+
+        if (isConfirmed) {
+          const response = await Api.post(
+            `admin/students/archive`,
+            { student_ids: selectedStudents },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          toast.success(response.data.message, {
+            position: "top-right",
+            duration: 4000,
+          });
+          setSelectedStudents([]); // Clear selected students
+          fetchData(currentPage); // Re-fetch data after archiving
+          console.log(response.data);
+        }
+      } catch (error) {
+        console.error("Error archiving students:", error);
+        toast.error("Failed to archive students.", {
+          position: "top-right",
+          duration: 4000,
+        });
+      }
+    };
     
 
     const downloadTemplate = () => {
@@ -325,45 +470,90 @@ const Leads = () => {
         document.body.removeChild(link);
     };
     
-    
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1);
+        fetchData(1, e.target.value); // Fetch data based on updated search term
+    };
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
 
     return (
         <>
-            <TitleCard title="Data Siswa" topMargin="mt-2" TopSideButtons={
-               
-                <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-2">
-                    
-                        
-                    <input
-                        type="text"
-                        className="input input-bordered input-sm w-full sm:w-64"
-                        placeholder="Search"
-                        value={searchTerm}
-                        onChange={handleSearchChange}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+                {/* Search Input */}
+                <input
+                  type="text"
+                  className="input input-sm input-bordered w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-200"
+                  placeholder="🔍 Cari siswa..."
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                />
+              
+                {/* Conditional Buttons and Select */}
+                {hasAnyPermission(["siswa.delete"]) && (
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-center w-full sm:w-auto">
+                    {/* Select Class */}
+                    <Select
+                      options={dataClass}
+                      value={selectedClass}
+                      onChange={handleClassChange}
+                      placeholder="🎓 Pilih Kelas"
+                      className="w-full sm:w-48 text-sm text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                      required
                     />
-                     {hasAnyPermission(["siswa.delete"]) && (
-                        <>
-                    <Link to="/app/data/siswa/tambah">
-                        <button className="btn btn-sm normal-case btn-primary w-full sm:w-auto">Add New</button>
+              
+                    {/* Add New Button */}
+                    <Link to="/app/data/siswa/tambah" className="w-full sm:w-auto">
+                      <button className="btn btn-sm normal-case btn-primary w-full sm:w-auto hover:scale-105 transition-all duration-150">
+                        ➕ Tambah
+                      </button>
                     </Link>
-                    <button className="btn btn-sm normal-case btn-warning w-full sm:w-auto" onClick={downloadData}>
-                        Download All Data
+              
+                    {/* Download All Data Button */}
+                    <button
+                      className="btn btn-sm normal-case btn-warning w-full sm:w-auto hover:scale-105 transition-all duration-150"
+                      onClick={downloadData}
+                    >
+                      📥 Download Data
                     </button>
-                    <button className="btn btn-sm normal-case btn-primary w-full sm:w-auto" onClick={() => document.getElementById('my_modal_5').showModal()}>
-                        Import Excel
+              
+                    {/* Import Excel Button */}
+                    <button
+                      className="btn btn-sm normal-case btn-primary w-full sm:w-auto hover:scale-105 transition-all duration-150"
+                      onClick={() => document.getElementById("my_modal_5").showModal()}
+                    >
+                      📂 Import Excel
                     </button>
-                    </>
-                     )}
-                </div>
-               
-            }>
+
+                    <button
+        className={`btn btn-sm normal-case ${showCheckbox ? "btn-secondary" : "btn-error"} w-full sm:w-auto hover:scale-105 transition-all duration-150`}
+        onClick={toggleCheckbox}
+      >
+        {showCheckbox ? "Batal Pilih" : "Archive Siswa"}
+      </button>
+
+                    {showCheckbox && (
+                      <button
+                        className="btn btn-sm normal-case btn-secondary w-full sm:w-auto hover:scale-105 transition-all duration-150"
+                        onClick={handleArchiveSelected}
+                      >
+                        📦 Archive
+                      </button>
+                    )}
+
+                    
+                  </div>
+                )}
+              </div>
+        
+            <TitleCard title={`Data Siswa (${pagination.total})`} topMargin="mt-2" >
                 <div className="overflow-x-auto w-full">
                     <table className="table w-full text-center">
                         <thead>
                             <tr>
+                              {showCheckbox && <th>Pilih</th>}
                                 <th>Nama</th>
                                 <th>Kelas</th>
                                 <th>Status PKL</th>
@@ -371,12 +561,21 @@ const Leads = () => {
                                 <th></th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200">
-                            {loading ? (
+                        <tbody className="divide-y divide-gray-200 dark:divide-[#191e24]">
+                            {isLoadingData ? (
                                 <SkeletonRow />
-                            ) : (
-                                filteredLeads.map((lead) => (
+                            ) : siswa.length > 0 ? (
+                                siswa.map((lead) => (
                                     <tr key={lead.id}>
+                                        {showCheckbox && (
+                                            <td>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedStudents.includes(lead.id)}
+                                                    onChange={() => handleCheckboxChange(lead.id)}
+                                                />
+                                            </td>
+                                        )}
                                         <td>{lead.name}</td>
                                         <td>{lead.classes ? lead.classes.name : "-"}</td>
                                         <td>
@@ -389,7 +588,7 @@ const Leads = () => {
                                             </div>
                                             <div className="flex items-center justify-center space-x-2">
                                             {hasAnyPermission(["siswa.delete"]) && (
-                                            <Link to={`/app/data/siswa/edit/${lead.user_id}`}>
+                                            <Link to={`/app/data/siswa/edit/${encryptId(lead.user_id)}}`}>
                                                     <button className="btn btn-sm btn-square btn-primary">
                                                         <PencilIcon className="h-4 w-4" />
                                                     </button>
@@ -408,6 +607,12 @@ const Leads = () => {
                                         </td>
                                     </tr>
                                 ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="5" className="text-center text-gray-500">
+                                        Tidak ada data.
+                                    </td>
+                                </tr>
                             )}
                         </tbody>
                     </table>

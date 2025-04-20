@@ -8,12 +8,10 @@ import swal from "sweetalert2";
 import toast from "react-hot-toast";
 
 export default function UserCreate() {
-  document.title = "Create User - NewsApp Administrator";
-
   const navigate = useNavigate();
   const [deskripsi, setDeskripsi] = useState("");
+  const [charCount, setCharCount] = useState(0);
   const [tanggal, setTanggal] = useState("");
-  const [judul, setJudul] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [tools, setTools] = useState("");
@@ -21,21 +19,45 @@ export default function UserCreate() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
+  const modules = {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ['bold', 'italic'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      [{ font: [] }],
+      ['link', 'image', 'video'],
+     
+    ]
+  };
+
+  const formats = [
+    'header',
+    'bold', 'italic',
+    'list', 'bullet',
+    'link', 'image', 'video',
+    'font'
+  ];
+  
+
   const token = Cookies.get("token");
+
+  const handleDeskripsiChange = (value) => {
+    setDeskripsi(value);
+    setCharCount(value.replace(/<[^>]+>/g, "").length);
+  };
 
   const storeUser = async (e) => {
     e.preventDefault();
 
-    // Validasi minimal 150 karakter untuk deskripsi
     const newErrors = {};
     if (deskripsi.length < 150)
       newErrors.deskripsi = [
         "Deskripsi harus terdiri dari minimal 150 karakter"
       ];
     if (!tanggal) newErrors.tanggal = ["Tanggal Wajib diisi"];
-    if (!startTime) newErrors.start_time = ["Start Time Wajib diisi"];
-    if (!endTime) newErrors.end_time = ["End Time Wajib diisi"];
-    if (!tools) newErrors.tools = ["Alat yang Digunakan Wajib diisi"];
+    if (!startTime) newErrors.start_time = ["Waktu mulai wajib diisi"];
+    if (!endTime) newErrors.end_time = ["Waktu selesai wajib diisi"];
+    if (!tools) newErrors.tools = ["Alat yang digunakan wajib diisi"];
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -47,7 +69,7 @@ export default function UserCreate() {
     try {
       const result = await swal.fire({
         title: "Tambah Jurnal Harian",
-        text: "Apakah Anda yakin ingin Menambahkan jurnal harian?",
+        text: "Apakah Anda yakin ingin menambahkan jurnal harian?",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -71,7 +93,7 @@ export default function UserCreate() {
           }
         });
 
-        toast.success("Program updated successfully!", {
+        toast.success("Laporan berhasil ditambahkan!", {
           position: "top-right",
           duration: 4000
         });
@@ -79,7 +101,7 @@ export default function UserCreate() {
         navigate("/app/laporan-pkl");
       }
     } catch (error) {
-      toast.error("Failed to update program. Please try again later.", {
+      toast.error("Gagal menambahkan laporan. Coba lagi nanti.", {
         position: "top-right",
         duration: 4000
       });
@@ -89,133 +111,132 @@ export default function UserCreate() {
   };
 
   return (
-    <div className="container mx-auto my-10">
-      <div className="flex flex-col">
-        <div className="dark:bg-gray-800 bg-white shadow-lg rounded-lg p-6 border-t-4 border-blue-500">
-          <h1 className="text-3xl font-bold text-center mb-4">
+    <div className=" mx-auto p-4 sm:p-6">
+      <div className="bg-base-100 shadow-md border border-gray-200 rounded-xl">
+        <div className="px-6 py-5">
+          <h2 className="text-xl font-bold text-primary mb-1">
             Tambah Laporan Kegiatan PKL
-          </h1>
-          <p className="text-center border-b pb-4 mb-4">
-            Silakan isi form di bawah!
+          </h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Silakan isi laporan kegiatan kamu hari ini.
           </p>
-
-          <form onSubmit={storeUser}>
-            <div className="mb-4">
-              <label className="block text-gray-700 font-bold mb-2">
-                Deskripsi Laporan
-              </label>
-              <ReactQuill
-                value={deskripsi}
-                onChange={setDeskripsi}
-                className="bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                theme="snow"
-                placeholder="Describe your activity..."
-              />
-              {errors.deskripsi && (
-                <div className="text-red-600 mt-2">{errors.deskripsi[0]}</div>
-              )}
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 font-bold mb-2">
-                Image (optional)
+  
+          <form onSubmit={storeUser} className="space-y-6">
+           { /* DESKRIPSI */}
+                  <div className="form-control">
+                    <label className="label font-semibold">
+                    <span className="label-text">Deskripsi Kegiatan</span>
+                    </label>
+                    <div className="rounded-lg border border-base-300 overflow-hidden">
+                    <ReactQuill
+                      value={deskripsi}
+                      onChange={handleDeskripsiChange}
+                      theme="snow"
+                      placeholder="Minimal 150 karakter..."
+                      style={{ height: "200px" }}
+                      modules={modules}
+                      formats={formats}
+                    />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">Karakter: {charCount}</p>
+                    {errors.deskripsi && (
+                    <p className="text-error text-sm mt-1">{errors.deskripsi[0]}</p>
+                    )}
+                  </div>
+              
+                  {/* GAMBAR */}
+            <div className="form-control hidden">
+              <label className="label font-semibold">
+                <span className="label-text">Gambar (opsional)</span>
               </label>
               <input
                 type="file"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                className="file-input file-input-bordered w-full"
                 onChange={(e) => setImage(e.target.files[0])}
               />
             </div>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 font-bold mb-2">
-                Alat Yang Digunakan
+  
+            {/* TOOLS */}
+            <div className="form-control">
+              <label className="label font-semibold">
+                <span className="label-text">Alat yang Digunakan</span>
               </label>
               <input
                 type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                className="input input-bordered w-full"
                 value={tools}
                 onChange={(e) => setTools(e.target.value)}
-                placeholder="Enter tools used"
+                placeholder="Contoh: Laptop, Visual Studio Code"
               />
               {errors.tools && (
-                <div className="text-red-600 mt-2">{errors.tools[0]}</div>
+                <p className="text-error text-sm mt-1">{errors.tools[0]}</p>
               )}
             </div>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 font-bold mb-2">
-                Tanggal Laporan
-              </label>
-              <input
-                type="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                value={tanggal}
-                onChange={(e) => setTanggal(e.target.value)}
-              />
-              {errors.tanggal && (
-                <div className="text-red-600 mt-2 p-1 rounded-lg">
-                  {errors.tanggal[0]}
-                </div>
-              )}
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 font-bold mb-2">
-                Start Time
-              </label>
-              <input
-                type="time"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-              />
-              {errors.start_time && (
-                <div className="text-red-600 mt-2">{errors.start_time[0]}</div>
-              )}
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 font-bold mb-2">
-                End Time
-              </label>
-              <input
-                type="time"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-              />
-              {errors.end_time && (
-                <div className="text-red-600 mt-2">{errors.end_time[0]}</div>
-              )}
-            </div>
-
-            <div>
-              <div>
-                <button
-                  type="submit"
-                  className={`w-full px-4 py-2 text-white ${
-                    isLoading
-                      ? "bg-gray-500 cursor-not-allowed"
-                      : "bg-blue-500 hover:bg-blue-700"
-                  } rounded-lg`}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <i className="fa fa-spinner fa-spin mr-2"></i> Loading...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fa fa-save mr-2"></i> Simpan
-                    </>
-                  )}
-                </button>
+  
+            {/* TANGGAL & WAKTU */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="form-control">
+                <label className="label font-semibold">
+                  <span className="label-text">Tanggal</span>
+                </label>
+                <input
+                  type="date"
+                  className="input input-bordered w-full"
+                  value={tanggal}
+                  onChange={(e) => setTanggal(e.target.value)}
+                />
+                {errors.tanggal && (
+                  <p className="text-error text-sm mt-1">{errors.tanggal[0]}</p>
+                )}
               </div>
+  
+              <div className="form-control">
+                <label className="label font-semibold">
+                  <span className="label-text">Waktu Mulai</span>
+                </label>
+                <input
+                  type="time"
+                  className="input input-bordered w-full"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                />
+                {errors.start_time && (
+                  <p className="text-error text-sm mt-1">{errors.start_time[0]}</p>
+                )}
+              </div>
+  
+              <div className="form-control">
+                <label className="label font-semibold">
+                  <span className="label-text">Waktu Selesai</span>
+                </label>
+                <input
+                  type="time"
+                  className="input input-bordered w-full"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                />
+                {errors.end_time && (
+                  <p className="text-error text-sm mt-1">{errors.end_time[0]}</p>
+                )}
+              </div>
+            </div>
+  
+            {/* BUTTON */}
+            <div className="form-control mt-6">
+              <button
+                type="submit"
+                className={`btn btn-primary w-full transition-all duration-200 ${
+                  isLoading ? "loading btn-disabled" : ""
+                }`}
+                disabled={isLoading}
+              >
+                {isLoading ? "Menyimpan..." : "Simpan Laporan"}
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
   );
+  
 }

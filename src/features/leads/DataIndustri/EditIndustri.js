@@ -4,12 +4,14 @@ import Map from '../../../components/Map'; // Sesuaikan path impor jika diperluk
 import Api from '../../../api';
 import Cookies from 'js-cookie';
 import { toast } from 'react-hot-toast';
+import CryptoJS from 'crypto-js';
 
 const token = Cookies.get('token');
 
 const EditLeadPage = () => {
     const navigate = useNavigate();
-    const { id } = useParams(); // Mengambil parameter id dari route
+    const { id } = useParams();
+    const [idUser, setId] = useState(""); // Mengambil parameter id dari route
     const [formData, setFormData] = useState({
         username: "",
         name: "",
@@ -19,41 +21,52 @@ const EditLeadPage = () => {
         latitude: "",
         industryMentorName: "",
         industryMentorNo: "",
-        roles: "",
+        roles: "industri",
     });
+
+
+     const decryptId = (encryptedId) => {
+        const secretKey = process.env.REACT_APP_SECRET_KEY;
+        const decoded = decodeURIComponent(encryptedId); 
+        const bytes = CryptoJS.AES.decrypt(decoded, secretKey);
+        return bytes.toString(CryptoJS.enc.Utf8);
+    };
+    
+    const decryptedId = decryptId(id);
 
     useEffect(() => {
         // Mengambil data industri ketika komponen dimuat
         const fetchLeadData = async () => {
             try {
-                const response = await Api.get (`admin/users/${id}`, {
+                const response = await Api.get (`admin/industri/${decryptedId}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
+                setId(response.data.data.user_id);
                 if (response.data && response.data.data) {
-                    const { name: username, roles, industries } = response.data.data;
+                    const industries = response.data.data;
                     setFormData({
-                        username: username || "",
-                        name: industries?.name || "",
+                        username: industries?.users?.name || "",
+                        name: industries.name || "",
                         bidang: industries?.bidang || "",
                         alamat: industries?.alamat || "",
                         longitude: industries?.longitude || "",
                         latitude: industries?.latitude || "",
                         industryMentorName: industries?.industryMentorName || "",
                         industryMentorNo: industries?.industryMentorNo || "",
-                        roles: roles.join(", ") || "", // Menggabungkan roles menjadi string
+                        roles: "industri",
                     });
                 } else {
                     console.error("Unexpected response structure:", response.data);
-                    toast.error("Failed to load lead data. Data format is incorrect.", {
+                    toast.error("gagal mengambil data", {
                         position: "top-right",
                         duration: 4000,
                     });
                 }
             } catch (error) {
                 console.error("Error fetching lead data:", error);
-                toast.error("Failed to load lead data.", {
+                toast.error("gagal mengambil data", {
                     position: "top-right",
                     duration: 4000,
                 });
@@ -71,15 +84,15 @@ const EditLeadPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await Api.put(`admin/users/${id}`, {
+            await Api.put(`admin/users/${idUser}`, {
                 ...formData,
-                roles: formData.roles.split(", ").map(role => role.trim()), // Mengubah string roles kembali menjadi array
+                roles: "industri",
             }, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            toast.success("Lead updated successfully!", {
+            toast.success("berhasil mengubah data", {
                 position: "top-right",
                 duration: 4000,
             });
@@ -289,7 +302,7 @@ const EditLeadPage = () => {
                         <button
                             type="button"
                             className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg"
-                            onClick={() => navigate('/app/data/users')}
+                            onClick={() => navigate('/app/data/industri')}
                         >
                             Cancel
                         </button>

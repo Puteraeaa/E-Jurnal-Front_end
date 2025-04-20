@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Api from '../../../api';
 import Cookies from 'js-cookie';
 import { toast } from 'react-hot-toast';
+import CryptoJS from 'crypto-js';
 
 const token = Cookies.get('token');
 
@@ -15,6 +16,15 @@ const EditStudentPage = () => {
     const [jurusan, setJurusan] = useState([]);
     const [orangtua, setOrangTua] = useState([]);
     const [industries, setIndustries] = useState([]);
+
+     const decryptId = (encryptedId) => {
+        const secretKey = process.env.REACT_APP_SECRET_KEY;
+        const decoded = decodeURIComponent(encryptedId); 
+        const bytes = CryptoJS.AES.decrypt(decoded, secretKey);
+        return bytes.toString(CryptoJS.enc.Utf8);
+    };
+    
+    const decryptedId = decryptId(id);
 
     const [formData, setFormData] = useState({
         user_id: "",
@@ -36,12 +46,13 @@ const EditStudentPage = () => {
     
     const fetchStudentData = async () => {
         try {
-            const response = await Api.get(`admin/users/${id}`, {
+            const response = await Api.get(`admin/users/${decryptedId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
             const student = response.data.data.student;
+            console.log("Student Data:", response.data);
             setFormData({
                 user_id: student.user_id || "",
                 username: response.data.data.name|| "",
@@ -80,12 +91,12 @@ const EditStudentPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await Api.patch(`admin/users/${id}`, formData, {
+            await Api.patch(`admin/users/${decryptedId}`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            toast.success("Lead updated successfully!", {
+            toast.success("data siswa berhasil di update", {
                 position: "top-right",
                 duration: 4000,
             });
@@ -99,19 +110,19 @@ const EditStudentPage = () => {
                     for (const [field, messages] of Object.entries(errorMessages)) {
                         console.error(`Field: ${field}, Errors: ${messages.join(', ')}`);
                     }
-                    toast.error(`Failed to update lead: ${Object.values(errorMessages)[0][0]}`, {
+                    toast.error(`gagal mengubah data ${Object.values(errorMessages)[0][0]}`, {
                         position: "top-right",
                         duration: 4000,
                     });
                 } else {
-                    toast.error(`Failed to update lead: ${error.response.data.message || 'Please check the form fields.'}`, {
+                    toast.error(`gagal mengubah data ${error.response.data.message || 'Please check the form fields.'}`, {
                         position: "top-right",
                         duration: 4000,
                     });
                 }
             } else {
                 console.error("Error updating lead:", error);
-                toast.error("Failed to update lead.", {
+                toast.error("gagal mengubah data", {
                     position: "top-right",
                     duration: 4000,
                 });

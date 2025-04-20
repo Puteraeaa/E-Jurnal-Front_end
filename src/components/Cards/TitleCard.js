@@ -11,7 +11,7 @@ import Subtitle from "../Typography/Subtitle"
 
                 {/* Top side button, show only if present */}
                 {
-                    TopSideButtons && <div className="inline-block float-right">{TopSideButtons}</div>
+                    TopSideButtons && <div className="inline-block float-right md:mt-0 mt-2" >{TopSideButtons}</div>
                 }
               </Subtitle>
               
