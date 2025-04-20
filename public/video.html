@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <div id="login-container" class="relative min-h-screen flex items-center justify-center"
+    style="background-image: url('default-background.jpg'); background-size: cover; background-position: center;">
+    <div class="bg-white bg-opacity-90 rounded-xl shadow-lg overflow-hidden w-full max-w-lg z-10 relative">
+      <div class="p-8 space-y-6">
+        <!-- School Logo and Title -->
+        <div class="text-center">
+          <img id="logo" src="default-logo.png" alt="Logo SMKN 1 Ciomas" class="w-[400px] mx-auto" />
+          <p class="text-center text-sm text-gray-600 mt-[-15px]">
+            Digitalisasi Praktik Kerja Lapangan SMKN 1 Ciomas
+          </p>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm">
+          <div class="space-y-4">
+            <div>
+              <label for="username" class="text-sm font-medium text-gray-700">Username</label>
+              <input type="text" id="username" placeholder="Masukkan username" 
+                     class="w-full mt-2 p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-400 focus:border-blue-500" />
+            </div>
+
+            <div>
+              <label for="password" class="text-sm font-medium text-gray-700">Password</label>
+              <input type="password" id="password" placeholder="Masukkan password"
+                     class="w-full mt-2 p-3 border border-gray-300 rounded-lg focus:ring focus:ring-blue-400 focus:border-blue-500" />
+            </div>
+          </div>
+
+          <button type="submit" id="loginButton"
+                  class="w-full mt-6 bg-gradient-to-r from-blue-600 to-blue-400 text-white py-2 rounded-lg font-bold hover:from-blue-500 hover:to-blue-300 focus:ring focus:ring-blue-300">
+            Login
+          </button>
+        </form>
+        
+        <!-- Other Content -->
+        <div class="text-center text-sm text-gray-600">
+          <a href="https://pplgsmkn1ciomas.my.id/PrivacyPolicy.html" class="underline">Kebijakan Privasi</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Function to load logo and background from localStorage
+    function loadDynamicContent() {
+        const logoLink = localStorage.getItem('logo');  // Ensure you're using the correct key
+        const backgroundLink = localStorage.getItem('background'); // Ensure you're using the correct key
+        console.log(backgroundLink);
+
+        // Menampilkan logo jika ada
+        if (logoLink) {
+            document.getElementById('logo').src = logoLink;
+        } else {
+            document.getElementById('logo').src = 'default-logo.png'; // Gambar default
+        }
+
+        // Menampilkan background jika ada
+        if (backgroundLink) {
+            document.getElementById('login-container').style.backgroundImage = `url(${backgroundLink})`;
+        } else {
+            document.getElementById('login-container').style.backgroundColor = '#f0f0f0'; // Warna default
+        }
+    }
+
+    // Load dynamic content when the page loads
+    window.onload = loadDynamicContent;
+
+    // Handle login form submission
+    document.getElementById('loginForm').addEventListener('submit', function (event) {
+      event.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      if (username && password) {
+        alert("Login berhasil dengan Username: " + username);
+      } else {
+        alert("Username dan Password harus diisi!");
+      }
+    });
+  </script>
+
+</body>
+</html>
